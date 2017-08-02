@@ -2,7 +2,7 @@
  * AngularJS Material Design
  * https://github.com/angular/material
  * @license MIT
- * v1.1.4-master-72f930b
+ * v1.1.4-master-2773469
  */
 (function( window, angular, undefined ){
 "use strict";
@@ -307,7 +307,7 @@ function MdToastDirective($mdToast) {
 
 function MdToastProvider($$interimElementProvider) {
   // Differentiate promise resolves: hide timeout (value == true) and hide action clicks (value == ok).
-  toastDefaultOptions['$inject'] = ["$animate", "$mdToast", "$mdUtil", "$mdMedia"];
+  toastDefaultOptions['$inject'] = ["$animate", "$mdToast", "$mdUtil", "$mdMedia", "$document"];
   var ACTION_RESOLVE = 'ok';
 
   var activeToastContent;
@@ -367,7 +367,7 @@ function MdToastProvider($$interimElementProvider) {
     return $mdToast;
 
   /* ngInject */
-  function toastDefaultOptions($animate, $mdToast, $mdUtil, $mdMedia) {
+  function toastDefaultOptions($animate, $mdToast, $mdUtil, $mdMedia, $document) {
     var SWIPE_EVENTS = '$md.swipeleft $md.swiperight $md.swipeup $md.swipedown';
     return {
       onShow: onShow,
@@ -384,7 +384,7 @@ function MdToastProvider($$interimElementProvider) {
           // Root element of template will be <md-toast>. We need to wrap all of its content inside of
           // of <div class="md-toast-content">. All templates provided here should be static, developer-controlled
           // content (meaning we're not attempting to guard against XSS).
-          var templateRoot = document.createElement('md-template');
+          var templateRoot = $document[0].createElement('md-template');
           templateRoot.innerHTML = template;
 
           // Iterate through all root children, to detect possible md-toast directives.

@@ -2,7 +2,7 @@
  * AngularJS Material Design
  * https://github.com/angular/material
  * @license MIT
- * v1.1.4-master-72f930b
+ * v1.1.4-master-2773469
  */
 goog.provide('ngmaterial.components.datepicker');
 goog.require('ngmaterial.components.icon');
@@ -43,7 +43,7 @@ angular.module('material.components.datepicker', [
    *   <md-calendar ng-model="birthday"></md-calendar>
    * </hljs>
    */
-  CalendarCtrl['$inject'] = ["$element", "$scope", "$$mdDateUtil", "$mdUtil", "$mdConstant", "$mdTheming", "$$rAF", "$attrs", "$mdDateLocale"];
+  CalendarCtrl['$inject'] = ["$element", "$scope", "$$mdDateUtil", "$mdUtil", "$mdConstant", "$mdTheming", "$$rAF", "$attrs", "$mdDateLocale", "$document"];
   angular.module('material.components.datepicker')
     .directive('mdCalendar', calendarDirective);
 
@@ -112,7 +112,7 @@ angular.module('material.components.datepicker', [
    * ngInject @constructor
    */
   function CalendarCtrl($element, $scope, $$mdDateUtil, $mdUtil,
-    $mdConstant, $mdTheming, $$rAF, $attrs, $mdDateLocale) {
+    $mdConstant, $mdTheming, $$rAF, $attrs, $mdDateLocale, $document) {
 
     $mdTheming($element);
 
@@ -136,6 +136,9 @@ angular.module('material.components.datepicker', [
 
     /** @final */
     this.$mdDateLocale = $mdDateLocale;
+
+    /** @final */
+    this.$document = $document;
 
     /** @final {Date} */
     this.today = this.dateUtil.createDateAtMidnight();
@@ -224,7 +227,7 @@ angular.module('material.components.datepicker', [
 
     var handleKeyElement;
     if ($element.parent().hasClass('md-datepicker-calendar')) {
-      handleKeyElement = angular.element(document.body);
+      handleKeyElement = angular.element($document[0].body);
     } else {
       handleKeyElement = $element;
     }
@@ -347,7 +350,7 @@ angular.module('material.components.datepicker', [
       }
 
       var cellId = this.getDateId(date, this.currentView);
-      var cell = document.getElementById(cellId);
+      var cell = this.$document[0].getElementById(cellId);
       if (cell) {
         cell.classList.add(this.FOCUSED_DATE_CLASS);
         cell.focus();
@@ -506,7 +509,7 @@ angular.module('material.components.datepicker', [
 (function() {
   'use strict';
 
-  CalendarMonthCtrl['$inject'] = ["$element", "$scope", "$animate", "$q", "$$mdDateUtil", "$mdDateLocale"];
+  CalendarMonthCtrl['$inject'] = ["$element", "$scope", "$animate", "$q", "$$mdDateUtil", "$mdDateLocale", "$document"];
   angular.module('material.components.datepicker')
     .directive('mdCalendarMonth', calendarDirective);
 
@@ -565,7 +568,7 @@ angular.module('material.components.datepicker', [
    * ngInject @constructor
    */
   function CalendarMonthCtrl($element, $scope, $animate, $q,
-    $$mdDateUtil, $mdDateLocale) {
+    $$mdDateUtil, $mdDateLocale, $document) {
 
     /** @final {!angular.JQLite} */
     this.$element = $element;
@@ -584,6 +587,9 @@ angular.module('material.components.datepicker', [
 
     /** @final */
     this.dateLocale = $mdDateLocale;
+
+    /** @final */
+    this.$document = $document;
 
     /** @final {HTMLElement} */
     this.calendarScroller = $element[0].querySelector('.md-virtual-repeat-scroller');
@@ -668,6 +674,7 @@ angular.module('material.components.datepicker', [
    */
   CalendarMonthCtrl.prototype.changeSelectedDate = function(date) {
     var self = this;
+    var $document = this.$document;
     var calendarCtrl = self.calendarCtrl;
     var previousSelectedDate = calendarCtrl.selectedDate;
     calendarCtrl.selectedDate = date;
@@ -678,7 +685,7 @@ angular.module('material.components.datepicker', [
 
       // Remove the selected class from the previously selected date, if any.
       if (previousSelectedDate) {
-        var prevDateCell = document.getElementById(calendarCtrl.getDateId(previousSelectedDate, namespace));
+        var prevDateCell = $document[0].getElementById(calendarCtrl.getDateId(previousSelectedDate, namespace));
         if (prevDateCell) {
           prevDateCell.classList.remove(selectedDateClass);
           prevDateCell.setAttribute('aria-selected', 'false');
@@ -687,7 +694,7 @@ angular.module('material.components.datepicker', [
 
       // Apply the select class to the new selected date if it is set.
       if (date) {
-        var dateCell = document.getElementById(calendarCtrl.getDateId(date, namespace));
+        var dateCell = $document[0].getElementById(calendarCtrl.getDateId(date, namespace));
         if (dateCell) {
           dateCell.classList.add(selectedDateClass);
           dateCell.setAttribute('aria-selected', 'true');
@@ -750,6 +757,7 @@ angular.module('material.components.datepicker', [
   CalendarMonthCtrl.prototype.buildWeekHeader = function() {
     var firstDayOfWeek = this.dateLocale.firstDayOfWeek;
     var shortDays = this.dateLocale.shortDays;
+    var document = this.$document[0];
 
     var row = document.createElement('tr');
     for (var i = 0; i < 7; i++) {
@@ -818,7 +826,7 @@ angular.module('material.components.datepicker', [
   'use strict';
 
   mdCalendarMonthBodyDirective['$inject'] = ["$compile", "$$mdSvgRegistry"];
-  CalendarMonthBodyCtrl['$inject'] = ["$element", "$$mdDateUtil", "$mdDateLocale"];
+  CalendarMonthBodyCtrl['$inject'] = ["$element", "$$mdDateUtil", "$mdDateLocale", "$document"];
   angular.module('material.components.datepicker')
       .directive('mdCalendarMonthBody', mdCalendarMonthBodyDirective);
 
@@ -864,7 +872,7 @@ angular.module('material.components.datepicker', [
    * Controller for a single calendar month.
    * ngInject @constructor
    */
-  function CalendarMonthBodyCtrl($element, $$mdDateUtil, $mdDateLocale) {
+  function CalendarMonthBodyCtrl($element, $$mdDateUtil, $mdDateLocale, $document) {
     /** @final {!angular.JQLite} */
     this.$element = $element;
 
@@ -873,6 +881,9 @@ angular.module('material.components.datepicker', [
 
     /** @final */
     this.dateLocale = $mdDateLocale;
+
+    /** @final */
+    this.$document = $document;
 
     /** @type {Object} Reference to the month view. */
     this.monthCtrl = null;
@@ -921,7 +932,7 @@ angular.module('material.components.datepicker', [
     var calendarCtrl = this.calendarCtrl;
 
     // TODO(jelbourn): cloneNode is likely a faster way of doing this.
-    var cell = document.createElement('td');
+    var cell = this.$document[0].createElement('td');
     cell.tabIndex = -1;
     cell.classList.add('md-calendar-date');
     cell.setAttribute('role', 'gridcell');
@@ -950,7 +961,7 @@ angular.module('material.components.datepicker', [
 
       if (this.isDateEnabled(opt_date)) {
         // Add a indicator for select, hover, and focus states.
-        var selectionIndicator = document.createElement('span');
+        var selectionIndicator = this.$document[0].createElement('span');
         selectionIndicator.classList.add('md-calendar-date-selection-indicator');
         selectionIndicator.textContent = cellText;
         cell.appendChild(selectionIndicator);
@@ -986,7 +997,7 @@ angular.module('material.components.datepicker', [
    * @returns {HTMLElement}
    */
   CalendarMonthBodyCtrl.prototype.buildDateRow = function(rowNumber) {
-    var row = document.createElement('tr');
+    var row = this.$document[0].createElement('tr');
     row.setAttribute('role', 'row');
 
     // Because of an NVDA bug (with Firefox), the row needs an aria-label in order
@@ -1004,6 +1015,7 @@ angular.module('material.components.datepicker', [
    */
   CalendarMonthBodyCtrl.prototype.buildCalendarForMonth = function(opt_dateInMonth) {
     var date = this.dateUtil.isValidDate(opt_dateInMonth) ? opt_dateInMonth : new Date();
+    var document = this.$document[0];
 
     var firstDayOfMonth = this.dateUtil.getFirstDateOfMonth(date);
     var firstDayOfTheWeek = this.getLocaleDay_(firstDayOfMonth);
@@ -1335,7 +1347,7 @@ angular.module('material.components.datepicker', [
 (function() {
   'use strict';
 
-  CalendarYearBodyCtrl['$inject'] = ["$element", "$$mdDateUtil", "$mdDateLocale"];
+  CalendarYearBodyCtrl['$inject'] = ["$element", "$$mdDateUtil", "$mdDateLocale", "$document"];
   angular.module('material.components.datepicker')
       .directive('mdCalendarYearBody', mdCalendarYearDirective);
 
@@ -1371,7 +1383,7 @@ angular.module('material.components.datepicker', [
    * Controller for a single year.
    * ngInject @constructor
    */
-  function CalendarYearBodyCtrl($element, $$mdDateUtil, $mdDateLocale) {
+  function CalendarYearBodyCtrl($element, $$mdDateUtil, $mdDateLocale, $document) {
     /** @final {!angular.JQLite} */
     this.$element = $element;
 
@@ -1380,6 +1392,9 @@ angular.module('material.components.datepicker', [
 
     /** @final */
     this.dateLocale = $mdDateLocale;
+
+    /** @final */
+    this.$document = $document;
 
     /** @type {Object} Reference to the calendar. */
     this.calendarCtrl = null;
@@ -1423,6 +1438,7 @@ angular.module('material.components.datepicker', [
    * @returns {HTMLElement}
    */
   CalendarYearBodyCtrl.prototype.buildMonthCell = function(year, month) {
+    var $document = this.$document;
     var calendarCtrl = this.calendarCtrl;
     var yearCtrl = this.yearCtrl;
     var cell = this.buildBlankCell();
@@ -1449,7 +1465,7 @@ angular.module('material.components.datepicker', [
 
     if (this.dateUtil.isMonthWithinRange(firstOfMonth,
         calendarCtrl.minDate, calendarCtrl.maxDate)) {
-      var selectionIndicator = document.createElement('span');
+      var selectionIndicator = $document[0].createElement('span');
       selectionIndicator.classList.add('md-calendar-date-selection-indicator');
       selectionIndicator.textContent = cellText;
       cell.appendChild(selectionIndicator);
@@ -1471,7 +1487,7 @@ angular.module('material.components.datepicker', [
    * @return {HTMLTableCellElement}
    */
   CalendarYearBodyCtrl.prototype.buildBlankCell = function() {
-    var cell = document.createElement('td');
+    var cell = this.$document[0].createElement('td');
     cell.tabIndex = -1;
     cell.classList.add('md-calendar-date');
     cell.setAttribute('role', 'gridcell');
@@ -1486,6 +1502,7 @@ angular.module('material.components.datepicker', [
    * @returns {DocumentFragment} A document fragment containing the months within the year.
    */
   CalendarYearBodyCtrl.prototype.buildCalendarForYear = function(date) {
+    var document = this.$document[0];
     // Store rows for the month in a document fragment so that we can append them all at once.
     var year = date.getFullYear();
     var yearBody = document.createDocumentFragment();
@@ -1725,7 +1742,7 @@ angular.module('material.components.datepicker', [
 
         // Looks for three chunks of content (either numbers or text) separated
         // by delimiters.
-        var re = /^(([a-zA-Z]{3,}|[0-9]{1,4})([ \.,]+|[\/\-])){2}([a-zA-Z]{3,}|[0-9]{1,4})$/;
+        var re = /^(([a-zA-Z]{3,}|[0-9]{1,4})([ .,]+|[/-])){2}([a-zA-Z]{3,}|[0-9]{1,4})$/;
         return re.test(dateString);
       }
 
@@ -2143,7 +2160,7 @@ angular.module('material.components.datepicker', [
   // TODO(jelbourn): input behavior (masking? auto-complete?)
 
 
-  DatePickerCtrl['$inject'] = ["$scope", "$element", "$attrs", "$window", "$mdConstant", "$mdTheming", "$mdUtil", "$mdDateLocale", "$$mdDateUtil", "$$rAF", "$filter"];
+  DatePickerCtrl['$inject'] = ["$scope", "$element", "$attrs", "$window", "$mdConstant", "$mdTheming", "$mdUtil", "$mdDateLocale", "$$mdDateUtil", "$$rAF", "$filter", "$document"];
   datePickerDirective['$inject'] = ["$$mdSvgRegistry", "$mdUtil", "$mdAria", "inputDirective"];
   angular.module('material.components.datepicker')
       .directive('mdDatepicker', datePickerDirective);
@@ -2374,10 +2391,14 @@ angular.module('material.components.datepicker', [
    * ngInject @constructor
    */
   function DatePickerCtrl($scope, $element, $attrs, $window, $mdConstant,
-    $mdTheming, $mdUtil, $mdDateLocale, $$mdDateUtil, $$rAF, $filter) {
+    $mdTheming, $mdUtil, $mdDateLocale, $$mdDateUtil, $$rAF, $filter, $document) {
 
     /** @final */
     this.$window = $window;
+
+    // Super secret window that the tests don't muck with.
+    /** @final */
+    this.$$window = $window;
 
     /** @final */
     this.dateUtil = $$mdDateUtil;
@@ -2394,6 +2415,9 @@ angular.module('material.components.datepicker', [
     /** @final */
     this.$mdDateLocale = $mdDateLocale;
 
+    /** @final */
+    this.$document = $document;
+
     /**
      * The root document element. This is used for attaching a top-level click handler to
      * close the calendar panel when a click outside said panel occurs. We use `documentElement`
@@ -2401,7 +2425,7 @@ angular.module('material.components.datepicker', [
      * to be completely off the screen and propagate events directly to the html element.
      * @type {!angular.JQLite}
      */
-    this.documentElement = angular.element(document.documentElement);
+    this.documentElement = angular.element($document[0].documentElement);
 
     /** @type {!angular.NgModelController} */
     this.ngModelCtrl = null;
@@ -2474,7 +2498,7 @@ angular.module('material.components.datepicker', [
      * triggers whenever the browser zooms in on a focused input.
      */
     this.windowEventName = IS_MOBILE_REGEX.test(
-      navigator.userAgent || navigator.vendor || window.opera
+      $window.navigator.userAgent || $window.navigator.vendor || $window.opera
     ) ? 'orientationchange' : 'resize';
 
     /** Pre-bound close handler so that the event listener can be removed. */
@@ -2796,8 +2820,9 @@ angular.module('material.components.datepicker', [
 
   /** Position and attach the floating calendar to the document. */
   DatePickerCtrl.prototype.attachCalendarPane = function() {
+    var $document = this.$document;
     var calendarPane = this.calendarPane;
-    var body = document.body;
+    var body = $document[0].body;
 
     calendarPane.style.transform = '';
     this.$element.addClass(OPEN_CLASS);
@@ -2820,13 +2845,13 @@ angular.module('material.components.datepicker', [
     // then it's possible that the already-scrolled body has a negative top/left. In this case,
     // we want to treat the "real" top as (0 - bodyRect.top). In a normal scrolling situation,
     // though, the top of the viewport should just be the body's scroll position.
-    var viewportTop = (bodyRect.top < 0 && document.body.scrollTop == 0) ?
+    var viewportTop = (bodyRect.top < 0 && body.scrollTop == 0) ?
         -bodyRect.top :
-        document.body.scrollTop;
+        body.scrollTop;
 
-    var viewportLeft = (bodyRect.left < 0 && document.body.scrollLeft == 0) ?
+    var viewportLeft = (bodyRect.left < 0 && body.scrollLeft == 0) ?
         -bodyRect.left :
-        document.body.scrollLeft;
+        body.scrollLeft;
 
     var viewportBottom = viewportTop + this.$window.innerHeight;
     var viewportRight = viewportLeft + this.$window.innerWidth;
@@ -2868,7 +2893,7 @@ angular.module('material.components.datepicker', [
 
     calendarPane.style.left = paneLeft + 'px';
     calendarPane.style.top = paneTop + 'px';
-    document.body.appendChild(calendarPane);
+    body.appendChild(calendarPane);
 
     // Add CSS class after one frame to trigger open animation.
     this.$$rAF(function() {
@@ -2878,9 +2903,10 @@ angular.module('material.components.datepicker', [
 
   /** Detach the floating calendar pane from the document. */
   DatePickerCtrl.prototype.detachCalendarPane = function() {
+    var $document = this.$document;
     this.$element.removeClass(OPEN_CLASS);
     this.mdInputContainer && this.mdInputContainer.element.removeClass(OPEN_CLASS);
-    angular.element(document.body).removeClass('md-datepicker-is-showing');
+    angular.element($document[0].body).removeClass('md-datepicker-is-showing');
     this.calendarPane.classList.remove('md-pane-open');
     this.calendarPane.classList.remove('md-datepicker-pos-adjusted');
 
@@ -2900,6 +2926,7 @@ angular.module('material.components.datepicker', [
    * @param {Event} event
    */
   DatePickerCtrl.prototype.openCalendarPane = function(event) {
+    var $$window = this.$$window;
     if (!this.isCalendarOpen && !this.isDisabled && !this.inputFocusedOnWindowBlur) {
       this.isCalendarOpen = this.isOpen = true;
       this.calendarPaneOpenedFrom = event.target;
@@ -2925,12 +2952,13 @@ angular.module('material.components.datepicker', [
         self.documentElement.on('click touchstart', self.bodyClickHandler);
       }, false);
 
-      window.addEventListener(this.windowEventName, this.windowEventHandler);
+      $$window.addEventListener(this.windowEventName, this.windowEventHandler);
     }
   };
 
   /** Close the floating calendar pane. */
   DatePickerCtrl.prototype.closeCalendarPane = function() {
+    var $window = this.$window;
     if (this.isCalendarOpen) {
       var self = this;
 
@@ -2939,7 +2967,7 @@ angular.module('material.components.datepicker', [
       self.evalAttr('ngBlur');
 
       self.documentElement.off('click touchstart', self.bodyClickHandler);
-      window.removeEventListener(self.windowEventName, self.windowEventHandler);
+      $window.removeEventListener(self.windowEventName, self.windowEventHandler);
 
       self.calendarPaneOpenedFrom.focus();
       self.calendarPaneOpenedFrom = null;
@@ -3016,7 +3044,7 @@ angular.module('material.components.datepicker', [
    * from re-opening.
    */
   DatePickerCtrl.prototype.handleWindowBlur = function() {
-    this.inputFocusedOnWindowBlur = document.activeElement === this.inputElement;
+    this.inputFocusedOnWindowBlur = this.$document[0].activeElement === this.inputElement;
   };
 
   /**

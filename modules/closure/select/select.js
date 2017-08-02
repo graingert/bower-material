@@ -2,7 +2,7 @@
  * AngularJS Material Design
  * https://github.com/angular/material
  * @license MIT
- * v1.1.4-master-72f930b
+ * v1.1.4-master-2773469
  */
 goog.provide('ngmaterial.components.select');
 goog.require('ngmaterial.components.backdrop');
@@ -630,7 +630,7 @@ function SelectMenuDirective($parse, $mdUtil, $mdConstant, $mdTheming) {
   // We want the scope to be set to 'false' so an isolated scope is not created
   // which would interfere with the md-select-header's access to the
   // parent scope.
-  SelectMenuController['$inject'] = ["$scope", "$attrs", "$element"];
+  SelectMenuController['$inject'] = ["$scope", "$attrs", "$element", "$timeout"];
   return {
     restrict: 'E',
     require: ['mdSelectMenu'],
@@ -686,7 +686,15 @@ function SelectMenuDirective($parse, $mdUtil, $mdConstant, $mdTheming) {
     }
   }
 
-  function SelectMenuController($scope, $attrs, $element) {
+  function SelectMenuController($scope, $attrs, $element, $timeout) {
+    function setTimeout(fn, delay) {
+      return $timeout(fn, delay, false);
+    }
+
+    function clearTimeout(obj) {
+      $timeout.cancel(obj);
+    }
+
     var self = this;
     self.isMultiple = angular.isDefined($attrs.multiple);
     // selected is an object with keys matching all of the selected options' hashed values
@@ -1647,7 +1655,7 @@ function SelectProvider($$interimElementProvider) {
 
         minWidth = Math.min(targetRect.width + centeredRect.paddingLeft + centeredRect.paddingRight, maxWidth);
 
-        fontSize = window.getComputedStyle(targetNode)['font-size'];
+        fontSize = $window.getComputedStyle(targetNode)['font-size'];
       }
 
       // Keep left and top within the window

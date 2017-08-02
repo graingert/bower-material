@@ -2,7 +2,7 @@
  * AngularJS Material Design
  * https://github.com/angular/material
  * @license MIT
- * v1.1.4-master-72f930b
+ * v1.1.4-master-2773469
  */
 goog.provide('ngmaterial.components.gridList');
 goog.require('ngmaterial.core');
@@ -12,7 +12,7 @@ goog.require('ngmaterial.core');
  */
 GridListController['$inject'] = ["$mdUtil"];
 GridLayoutFactory['$inject'] = ["$mdUtil"];
-GridListDirective['$inject'] = ["$interpolate", "$mdConstant", "$mdGridLayout", "$mdMedia"];
+GridListDirective['$inject'] = ["$interpolate", "$mdConstant", "$mdGridLayout", "$mdMedia", "$document"];
 GridTileDirective['$inject'] = ["$mdMedia"];
 angular.module('material.components.gridList', ['material.core'])
        .directive('mdGridList', GridListDirective)
@@ -105,7 +105,7 @@ angular.module('material.components.gridList', ['material.core'])
  * </md-grid-list>
  * </hljs>
  */
-function GridListDirective($interpolate, $mdConstant, $mdGridLayout, $mdMedia) {
+function GridListDirective($interpolate, $mdConstant, $mdGridLayout, $mdMedia, $document) {
   return {
     restrict: 'E',
     controller: GridListController,
@@ -282,6 +282,7 @@ function GridListDirective($interpolate, $mdConstant, $mdGridLayout, $mdMedia) {
 
       // The width and horizontal position of each tile is always calculated the same way, but the
       // height and vertical position depends on the rowMode.
+      var document = $document[0];
       var ltr = document.dir != 'rtl' && document.body.dir != 'rtl';
       var style = ltr ? {
           left: POSITION({ unit: hUnit, offset: position.col, gutter: gutter }),
@@ -328,10 +329,10 @@ function GridListDirective($interpolate, $mdConstant, $mdGridLayout, $mdMedia) {
           var vGutterShare = (rowCount - 1) / rowCount;
 
           // Percent of the available vertical space that one row takes up.
-          var vShare = (1 / rowCount) * 100;
+          vShare = (1 / rowCount) * 100;
 
           // Base vertical size of a row.
-          var vUnit = UNIT({share: vShare, gutterShare: vGutterShare, gutter: gutter});
+          vUnit = UNIT({share: vShare, gutterShare: vGutterShare, gutter: gutter});
 
           style.top = POSITION({unit: vUnit, offset: position.row, gutter: gutter});
           style.height = DIMENSION({unit: vUnit, span: spans.row, gutter: gutter});

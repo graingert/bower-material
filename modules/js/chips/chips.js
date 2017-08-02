@@ -2,7 +2,7 @@
  * AngularJS Material Design
  * https://github.com/angular/material
  * @license MIT
- * v1.1.4-master-72f930b
+ * v1.1.4-master-2773469
  */
 (function( window, angular, undefined ){
 "use strict";
@@ -20,7 +20,7 @@ angular.module('material.components.chips', [
 ]);
 
 
-MdChipCtrl['$inject'] = ["$scope", "$element", "$mdConstant", "$timeout", "$mdUtil"];angular
+MdChipCtrl['$inject'] = ["$scope", "$element", "$mdConstant", "$timeout", "$mdUtil", "$document"];angular
   .module('material.components.chips')
   .controller('MdChipCtrl', MdChipCtrl);
 
@@ -35,7 +35,7 @@ MdChipCtrl['$inject'] = ["$scope", "$element", "$mdConstant", "$timeout", "$mdUt
  * @param $mdUtil
  * @constructor
  */
-function MdChipCtrl ($scope, $element, $mdConstant, $timeout, $mdUtil) {
+function MdChipCtrl ($scope, $element, $mdConstant, $timeout, $mdUtil, $document) {
   /**
    * @type {$scope}
    */
@@ -60,6 +60,11 @@ function MdChipCtrl ($scope, $element, $mdConstant, $timeout, $mdUtil) {
    * @type {$mdUtil}
    */
   this.$mdUtil = $mdUtil;
+
+  /**
+   * @type {$document}
+   */
+  this.$document = $document;
 
   /**
    * @type {boolean}
@@ -152,6 +157,8 @@ MdChipCtrl.prototype.goOutOfEditMode = function() {
  * @param node
  */
 MdChipCtrl.prototype.selectNodeContents = function(node) {
+  var document = this.$document[0];
+  var window = this.$window;
   var range, selection;
   if (document.body.createTextRange) {
     range = document.body.createTextRange();

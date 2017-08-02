@@ -2,7 +2,7 @@
  * AngularJS Material Design
  * https://github.com/angular/material
  * @license MIT
- * v1.1.4-master-72f930b
+ * v1.1.4-master-2773469
  */
 (function( window, angular, undefined ){
 "use strict";
@@ -11,7 +11,7 @@
  * @ngdoc module
  * @name material.components.virtualRepeat
  */
-VirtualRepeatContainerController['$inject'] = ["$$rAF", "$mdUtil", "$mdConstant", "$parse", "$rootScope", "$window", "$scope", "$element", "$attrs"];
+VirtualRepeatContainerController['$inject'] = ["$$rAF", "$mdUtil", "$mdConstant", "$parse", "$rootScope", "$window", "$scope", "$element", "$attrs", "$document"];
 VirtualRepeatController['$inject'] = ["$scope", "$element", "$attrs", "$browser", "$document", "$rootScope", "$$rAF", "$mdUtil"];
 VirtualRepeatDirective['$inject'] = ["$parse"];
 angular.module('material.components.virtualRepeat', [
@@ -108,11 +108,12 @@ var NUM_EXTRA = 3;
 
 /** ngInject */
 function VirtualRepeatContainerController($$rAF, $mdUtil, $mdConstant, $parse, $rootScope, $window, $scope,
-                                          $element, $attrs) {
+                                          $element, $attrs, $document) {
   this.$rootScope = $rootScope;
   this.$scope = $scope;
   this.$element = $element;
   this.$attrs = $attrs;
+  this.$document = $document;
 
   /** @type {number} The width or height of the container */
   this.size = 0;
@@ -266,6 +267,7 @@ VirtualRepeatContainerController.prototype.getDimensionName_ = function() {
 VirtualRepeatContainerController.prototype.sizeScroller_ = function(size) {
   var dimension =  this.getDimensionName_();
   var crossDimension = this.isHorizontal() ? 'height' : 'width';
+  var $document = this.$document;
 
   // Clear any existing dimensions.
   this.sizer.innerHTML = '';
@@ -283,7 +285,7 @@ VirtualRepeatContainerController.prototype.sizeScroller_ = function(size) {
     var numChildren = Math.floor(size / this.maxElementPixels);
 
     // Element template to clone for each max-size piece.
-    var sizerChild = document.createElement('div');
+    var sizerChild = $document[0].createElement('div');
     sizerChild.style[dimension] = this.maxElementPixels + 'px';
     sizerChild.style[crossDimension] = '1px';
 
@@ -389,6 +391,7 @@ VirtualRepeatContainerController.prototype.resetScroll = function() {
 
 
 VirtualRepeatContainerController.prototype.handleScroll_ = function() {
+  var document = this.$document[0];
   var ltr = document.dir != 'rtl' && document.body.dir != 'rtl';
   if(!ltr && !this.maxSize) {
     this.scroller.scrollLeft = this.scrollSize;

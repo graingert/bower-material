@@ -2,7 +2,7 @@
  * AngularJS Material Design
  * https://github.com/angular/material
  * @license MIT
- * v1.1.4-master-72f930b
+ * v1.1.4-master-2773469
  */
 (function( window, angular, undefined ){
 "use strict";
@@ -1004,7 +1004,7 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
         index = ctrl[ key ];
     for (newIndex = index + inc;
          ctrl.tabs[ newIndex ] && ctrl.tabs[ newIndex ].scope.disabled;
-         newIndex += inc) {}
+         newIndex += inc) { /* do nothing */ }
 
     newIndex = (index + inc + ctrl.tabs.length) % ctrl.tabs.length;
 
@@ -1499,7 +1499,7 @@ function MdTabsDummyWrapper ($mdUtil, $window) {
           characterData: true
         };
 
-        observer = new MutationObserver(mutationCallback);
+        observer = new $window.MutationObserver(mutationCallback);
         observer.observe(element[0], config);
         disconnect = observer.disconnect.bind(observer);
       } else {

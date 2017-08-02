@@ -2,7 +2,7 @@
  * AngularJS Material Design
  * https://github.com/angular/material
  * @license MIT
- * v1.1.4-master-72f930b
+ * v1.1.4-master-2773469
  */
 (function( window, angular, undefined ){
 "use strict";
@@ -319,7 +319,7 @@ function ColorUtilFactory() {
    */
   function rgbaToRgb (color) {
     return color
-      ? color.replace('rgba', 'rgb').replace(/,[^\),]+\)/, ')')
+      ? color.replace('rgba', 'rgb').replace(/,[^),]+\)/, ')')
       : 'rgb(0,0,0)';
   }
 
@@ -335,16 +335,17 @@ function ColorUtilFactory() {
 (function(){
 "use strict";
 
-angular.module('material.core')
+
+MdConstantFactory.$inject = ["$document"];angular.module('material.core')
 .factory('$mdConstant', MdConstantFactory);
 
 /**
  * Factory function that creates the grab-bag $mdConstant service.
  * @ngInject
  */
-function MdConstantFactory() {
+function MdConstantFactory($document) {
 
-  var prefixTestEl = document.createElement('div');
+  var prefixTestEl = $document[0].createElement('div');
   var vendorPrefix = getVendorPrefix(prefixTestEl);
   var isWebkit = /webkit/i.test(vendorPrefix);
   var SPECIAL_CHARS_REGEXP = /([:\-_]+(.))/g;
@@ -1091,8 +1092,8 @@ function UtilFactory($document, $timeout, $compile, $rootScope, $$mdAnimate, $in
 
   var $mdUtil = {
     dom: {},
-    now: window.performance && window.performance.now ?
-      angular.bind(window.performance, window.performance.now) : Date.now || function() {
+    now: $window.performance && $window.performance.now ?
+      angular.bind($window.performance, $window.performance.now) : Date.now || function() {
       return new Date().getTime();
     },
 
@@ -1153,7 +1154,7 @@ function UtilFactory($document, $timeout, $compile, $rootScope, $$mdAnimate, $in
 
     clientRect: function(element, offsetParent, isOffsetRect) {
       var node = getNode(element);
-      offsetParent = getNode(offsetParent || node.offsetParent || document.body);
+      offsetParent = getNode(offsetParent || node.offsetParent || $document[0].body);
       var nodeRect = node.getBoundingClientRect();
 
       // The user can ask for an offsetRect: a rect relative to the offsetParent,
@@ -1189,7 +1190,7 @@ function UtilFactory($document, $timeout, $compile, $rootScope, $$mdAnimate, $in
      * @returns {number}
      */
     getViewportTop: function() {
-      return window.scrollY || window.pageYOffset || 0;
+      return $window.scrollY || $window.pageYOffset || 0;
     },
 
     /**
@@ -1380,7 +1381,7 @@ function UtilFactory($document, $timeout, $compile, $rootScope, $$mdAnimate, $in
     forceFocus: function(element) {
       var node = element[0] || element;
 
-      document.addEventListener('click', function focusOnClick(ev) {
+      $document[0].addEventListener('click', function focusOnClick(ev) {
         if (ev.target === node && ev.$focus) {
           node.focus();
           ev.stopImmediatePropagation();
@@ -1389,8 +1390,8 @@ function UtilFactory($document, $timeout, $compile, $rootScope, $$mdAnimate, $in
         }
       }, true);
 
-      var newEvent = document.createEvent('MouseEvents');
-      newEvent.initMouseEvent('click', false, true, window, {}, 0, 0, 0, 0,
+      var newEvent = $document[0].createEvent('MouseEvents');
+      newEvent.initMouseEvent('click', false, true, $window, {}, 0, 0, 0, 0,
         false, false, false, false, 0, null);
       newEvent.$material = true;
       newEvent.$focus = true;
@@ -1412,7 +1413,7 @@ function UtilFactory($document, $timeout, $compile, $rootScope, $$mdAnimate, $in
      * be property names, property chains, or array indices.
      */
     supplant: function(template, values, pattern) {
-      pattern = pattern || /\{([^\{\}]*)\}/g;
+      pattern = pattern || /\{([^{}]*)\}/g;
       return template.replace(pattern, function(a, b) {
         var p = b.split('.'),
           r = values;
@@ -1602,7 +1603,7 @@ function UtilFactory($document, $timeout, $compile, $rootScope, $$mdAnimate, $in
      * Build polyfill for the Node.contains feature (if needed)
      */
     elementContains: function(node, child) {
-      var hasContains = (window.Node && window.Node.prototype && Node.prototype.contains);
+      var hasContains = ($window.Node && $window.Node.prototype && $window.Node.prototype.contains);
       var findFn = hasContains ? angular.bind(node, node.contains) : angular.bind(node, function(arg) {
         // compares the positions of two nodes and returns a bitmask
         return (node === child) || !!(this.compareDocumentPosition(arg) & 16)
@@ -1632,7 +1633,7 @@ function UtilFactory($document, $timeout, $compile, $rootScope, $$mdAnimate, $in
        * Breadth-First tree scan for element with matching `nodeName`
        */
       function scanTree(element) {
-        return scanLevel(element) || (!!scanDeep ? scanChildren(element) : null);
+        return scanLevel(element) || (scanDeep ? scanChildren(element) : null);
       }
 
       /**
@@ -1768,7 +1769,7 @@ function UtilFactory($document, $timeout, $compile, $rootScope, $$mdAnimate, $in
     getNearestContentElement: function (element) {
       var current = element.parent()[0];
       // Look for the nearest parent md-content, stopping at the rootElement.
-      while (current && current !== $rootElement[0] && current !== document.body && current.nodeName.toUpperCase() !== 'MD-CONTENT') {
+      while (current && current !== $rootElement[0] && current !== $document[0].body && current.nodeName.toUpperCase() !== 'MD-CONTENT') {
         current = current.parentNode;
       }
       return current;
@@ -1938,7 +1939,7 @@ angular.element.prototype.blur = angular.element.prototype.blur || function() {
  * @description
  * Aria Expectations for AngularJS Material components.
  */
-MdAriaService.$inject = ["$$rAF", "$log", "$window", "$interpolate"];
+mdAriaService.$inject = ["$$rAF", "$log", "$window", "$interpolate", "$document", "showWarnings"];
 angular
   .module('material.core')
   .provider('$mdAria', MdAriaProvider);
@@ -1972,8 +1973,8 @@ function MdAriaProvider() {
 
   return {
     disableWarnings: disableWarnings,
-    $get: ["$$rAF", "$log", "$window", "$interpolate", function($$rAF, $log, $window, $interpolate) {
-      return MdAriaService.apply(config, arguments);
+    $get: ["$injector", function($injector) {
+      return $injector.invoke(mdAriaService, undefined, config);
     }]
   };
 
@@ -1990,12 +1991,7 @@ function MdAriaProvider() {
 /*
  * @ngInject
  */
-function MdAriaService($$rAF, $log, $window, $interpolate) {
-
-  // Load the showWarnings option from the current context and store it inside of a scope variable,
-  // because the context will be probably lost in some function calls.
-  var showWarnings = this.showWarnings;
-
+function mdAriaService($$rAF, $log, $window, $interpolate, $document, showWarnings) {
   return {
     expect: expect,
     expectAsync: expectAsync,
@@ -2065,7 +2061,7 @@ function MdAriaService($$rAF, $log, $window, $interpolate) {
 
   function getText(element) {
     element = element[0] || element;
-    var walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+    var walker = $document[0].createTreeWalker(element, $window.NodeFilter.SHOW_TEXT, null, false);
     var text = '';
 
     var node;
@@ -2266,7 +2262,7 @@ function MdAriaService($$rAF, $log, $window, $interpolate) {
  * @description
  * AngularJS Material template and element compiler.
  */
-MdCompilerService.$inject = ["$q", "$templateRequest", "$injector", "$compile", "$controller"];
+MdCompilerService.$inject = ["$q", "$templateRequest", "$injector", "$compile", "$controller", "$document"];
 angular
   .module('material.core')
   .service('$mdCompiler', MdCompilerService);
@@ -2344,9 +2340,12 @@ angular
  * </hljs>
  *
  */
-function MdCompilerService($q, $templateRequest, $injector, $compile, $controller) {
+function MdCompilerService($q, $templateRequest, $injector, $compile, $controller, $document) {
   /** @private @const {!angular.$q} */
   this.$q = $q;
+
+  /** @private @const {!angular.$document} */
+  this.$document = $document;
 
   /** @private @const {!angular.$templateRequest} */
   this.$templateRequest = $templateRequest;
@@ -2404,9 +2403,11 @@ function MdCompilerService($q, $templateRequest, $injector, $compile, $controlle
  *
  */
 MdCompilerService.prototype.compile = function(options) {
+  var $q = this.$q;
+  var $document = this.$document;
 
   if (options.contentElement) {
-    return this._prepareContentElement(options);
+    return prepareContentElement(options, $q, $document);
   } else {
     return this._compileTemplate(options);
   }
@@ -2419,11 +2420,11 @@ MdCompilerService.prototype.compile = function(options) {
  * @param {!Object} options Options to be used for the compiler.
  * @private
  */
-MdCompilerService.prototype._prepareContentElement = function(options) {
+function prepareContentElement(options, $q, $document) {
 
-  var contentElement = this._fetchContentElement(options);
+  var contentElement = fetchContentElement(options, $document);
 
-  return this.$q.resolve({
+  return $q.resolve({
     element: contentElement.element,
     cleanup: contentElement.restore,
     locals: {},
@@ -2432,7 +2433,7 @@ MdCompilerService.prototype._prepareContentElement = function(options) {
     }
   });
 
-};
+}
 
 /**
  * Compiles a template by considering all options and waiting for all resolves to be ready.
@@ -2542,10 +2543,11 @@ MdCompilerService.prototype._compileElement = function(locals, element, options)
  * @returns {{element: !JQLite, restore: !Function}}
  * @private
  */
-MdCompilerService.prototype._fetchContentElement = function(options) {
+function fetchContentElement(options, $document) {
 
   var contentEl = options.contentElement;
   var restoreFn = null;
+  var document = $document[0];
 
   if (angular.isString(contentEl)) {
     contentEl = document.querySelector(contentEl);
@@ -2586,18 +2588,18 @@ MdCompilerService.prototype._fetchContentElement = function(options) {
         // before.
         parent.insertBefore(element, nextSibling);
       }
-    }
+    };
   }
-};
-
+}
 
 })();
 (function(){
 "use strict";
 
 
-MdGesture.$inject = ["$$MdGestureHandler", "$$rAF", "$timeout"];
-attachToDocument.$inject = ["$mdGesture", "$$MdGestureHandler"];var HANDLERS = {};
+MdGesture.$inject = ["$$MdGestureHandler", "$$rAF", "$timeout", "$window", "$document"];
+MdGestureHandler.$inject = ["$window", "$document"];
+attachToDocument.$inject = ["$mdGesture", "$$MdGestureHandler", "$document"];var HANDLERS = {};
 
 /* The state of the current 'pointer'
  * The pointer represents the state of the current touch.
@@ -2665,8 +2667,8 @@ MdGestureProvider.prototype = {
    * $get is used to build an instance of $mdGesture
    * @ngInject
    */
-  $get : ["$$MdGestureHandler", "$$rAF", "$timeout", function($$MdGestureHandler, $$rAF, $timeout) {
-       return new MdGesture($$MdGestureHandler, $$rAF, $timeout);
+  $get : ["$injector", function($injector) {
+    return $injector.instantiate(MdGesture);
   }]
 };
 
@@ -2676,7 +2678,9 @@ MdGestureProvider.prototype = {
  * MdGesture factory construction function
  * @ngInject
  */
-function MdGesture($$MdGestureHandler, $$rAF, $timeout) {
+function MdGesture($$MdGestureHandler, $$rAF, $timeout, $window, $document) {
+  var window = $window;
+  var navigator = $window.navigator;
   var userAgent = navigator.userAgent || navigator.vendor || window.opera;
   var isIos = userAgent.match(/ipad|iphone|ipod/i);
   var isAndroid = userAgent.match(/android/i);
@@ -2938,7 +2942,7 @@ function MdGesture($$MdGestureHandler, $$rAF, $timeout) {
     });
 
   function getTouchAction() {
-    var testEl = document.createElement('div');
+    var testEl = $document[0].createElement('div');
     var vendorPrefixes = ['', 'webkit', 'Moz', 'MS', 'ms', 'o'];
 
     for (var i = 0; i < vendorPrefixes.length; i++) {
@@ -2968,8 +2972,11 @@ function GestureHandler (name) {
   this.state = {};
 }
 
-function MdGestureHandler() {
-  var hasJQuery =  (typeof window.jQuery !== 'undefined') && (angular.element === window.jQuery);
+/**
+ * @ngInject
+ */
+function MdGestureHandler($window, $document) {
+  var hasJQuery =  (typeof $window.jQuery !== 'undefined') && (angular.element === $window.jQuery);
 
   GestureHandler.prototype = {
     options: {},
@@ -3091,13 +3098,14 @@ function MdGestureHandler() {
    * @param eventPointer the pointer object that matches this event.
    */
   function nativeDispatchEvent(srcEvent, eventType, eventPointer) {
+    var document = $document[0];
     eventPointer = eventPointer || pointer;
     var eventObj;
 
     if (eventType === 'click' || eventType == 'mouseup' || eventType == 'mousedown' ) {
       eventObj = document.createEvent('MouseEvents');
       eventObj.initMouseEvent(
-        eventType, true, true, window, srcEvent.detail,
+        eventType, true, true, $window, srcEvent.detail,
         eventPointer.x, eventPointer.y, eventPointer.x, eventPointer.y,
         srcEvent.ctrlKey, srcEvent.altKey, srcEvent.shiftKey, srcEvent.metaKey,
         srcEvent.button, srcEvent.relatedTarget || null
@@ -3119,10 +3127,11 @@ function MdGestureHandler() {
  * Attach Gestures: hook document and check shouldHijack clicks
  * @ngInject
  */
-function attachToDocument( $mdGesture, $$MdGestureHandler ) {
+function attachToDocument( $mdGesture, $$MdGestureHandler, $document) {
 
   // Polyfill document.contains for IE11.
-  // TODO: move to util
+  // TODO: avoid muating $document!
+  var document = $document[0];
   document.contains || (document.contains = function (node) {
     return document.body.contains(node);
   });
@@ -3355,7 +3364,7 @@ function getEventPoint(ev) {
  * @description
  * User interaction detection to provide proper accessibility.
  */
-MdInteractionService.$inject = ["$timeout", "$mdUtil"];
+MdInteractionService.$inject = ["$timeout", "$mdUtil", "$document", "$window"];
 angular
   .module('material.core.interaction', [])
   .service('$mdInteraction', MdInteractionService);
@@ -3385,11 +3394,16 @@ angular
  * </hljs>
  *
  */
-function MdInteractionService($timeout, $mdUtil) {
+/**
+ * @ngInject
+ */
+function MdInteractionService($timeout, $mdUtil, $document, $window) {
   this.$timeout = $timeout;
   this.$mdUtil = $mdUtil;
+  this.$window = $window;
+  this.$document = $document;
 
-  this.bodyElement = angular.element(document.body);
+  this.bodyElement = angular.element($document[0].body);
   this.isBuffering = false;
   this.bufferTimeout = null;
   this.lastInteractionType = null;
@@ -3424,6 +3438,8 @@ function MdInteractionService($timeout, $mdUtil) {
  * body element.
  */
 MdInteractionService.prototype.initializeEvents = function() {
+  var window = this.$window;
+  var document = this.$document[0];
   // IE browsers can also trigger pointer events, which also leads to an interaction.
   var pointerEvent = 'MSPointerEvent' in window ? 'MSPointerDown' : 'PointerEvent' in window ? 'pointerdown' : null;
 
@@ -4267,6 +4283,8 @@ function InterimElementProvider() {
 (function() {
   'use strict';
 
+   detectDisabledLayouts.$inject = ["$document", "$$mdLayout"];
+  disableLayoutDirective.$inject = ["$$mdLayout"];
   var $mdUtil, $interpolate, $log;
 
   var SUFFIXES = /(-gt)?-(sm|md|lg|print)/g;
@@ -4276,25 +4294,6 @@ function InterimElementProvider() {
   var LAYOUT_OPTIONS = ['row', 'column'];
   var ALIGNMENT_MAIN_AXIS= [ "", "start", "center", "end", "stretch", "space-around", "space-between" ];
   var ALIGNMENT_CROSS_AXIS= [ "", "start", "center", "end", "stretch" ];
-
-  var config = {
-    /**
-     * Enable directive attribute-to-class conversions
-     * Developers can use `<body md-layout-css />` to quickly
-     * disable the Layout directives and prohibit the injection of Layout classNames
-     */
-    enabled: true,
-
-    /**
-     * List of mediaQuery breakpoints and associated suffixes
-     *
-     *   [
-     *    { suffix: "sm", mediaQuery: "screen and (max-width: 599px)" },
-     *    { suffix: "md", mediaQuery: "screen and (min-width: 600px) and (max-width: 959px)" }
-     *   ]
-     */
-    breakpoints: []
-  };
 
   registerLayoutAPI( angular.module('material.core.layout', ['ng']) );
 
@@ -4339,8 +4338,8 @@ function InterimElementProvider() {
    *  ```
    */
   function registerLayoutAPI(module){
-    var PREFIX_REGEXP = /^((?:x|data)[\:\-_])/i;
-    var SPECIAL_CHARS_REGEXP = /([\:\-\_]+(.))/g;
+    var PREFIX_REGEXP = /^((?:x|data)[:\-_])/i;
+    var SPECIAL_CHARS_REGEXP = /([:\-_]+(.))/g;
 
     // NOTE: these are also defined in constants::MEDIA_PRIORITY and constants::MEDIA
     var BREAKPOINTS     = [ "", "xs", "gt-xs", "sm", "gt-sm", "md", "gt-md", "lg", "gt-lg", "xl", "print" ];
@@ -4368,10 +4367,28 @@ function InterimElementProvider() {
     // Register other, special directive functions for the Layout features:
     module
 
-      .provider('$$mdLayout'     , function() {
+      .provider('$$mdLayout', function() {
+        /**
+         * Enable directive attribute-to-class conversions
+         * Developers can use `<body md-layout-css />` to quickly
+         * disable the Layout directives and prohibit the injection of Layout classNames
+         */
+        var enabled = true;
         // Publish internal service for Layouts
         return {
-          $get : angular.noop,
+          $get : function() {
+            return {
+              enabled: function() {
+                return enabled;
+              },
+              disabled: function() {
+                return !enabled;
+              },
+              disable: function() {
+                enabled = false;
+              }
+            };
+          },
           validateAttributeValue : validateAttributeValue,
           validateAttributeUsage : validateAttributeUsage,
           /**
@@ -4379,7 +4396,7 @@ function InterimElementProvider() {
            * When disabled, this stops all attribute-to-classname generations
            */
           disableLayouts  : function(isDisabled) {
-            config.enabled =  (isDisabled !== true);
+            enabled =  (isDisabled !== true);
           }
         };
       })
@@ -4411,8 +4428,7 @@ function InterimElementProvider() {
       .directive('showLtMd'       , warnAttrNotSupported('show-lt-md'))
       .directive('showLtLg'       , warnAttrNotSupported('show-lt-lg'))
 
-      // Determine if
-      .config( detectDisabledLayouts );
+      .run( detectDisabledLayouts );
 
     /**
      * Converts snake_case to camelCase.
@@ -4439,9 +4455,10 @@ function InterimElementProvider() {
    /**
     * @ngInject
     */
-   function detectDisabledLayouts() {
-     var isDisabled = !!document.querySelector('[md-layouts-disabled]');
-     config.enabled = !isDisabled;
+   function detectDisabledLayouts($document, $$mdLayout) {
+     if ($document[0].querySelector('[md-layouts-disabled]')) {
+       $$mdLayout.disable();
+     }
    }
 
   /**
@@ -4464,9 +4481,12 @@ function InterimElementProvider() {
    * conversions; this would obviate the use of the `md-layout-css` directive
    *
    */
-  function disableLayoutDirective() {
+  /**
+   * @ngInject
+   */
+  function disableLayoutDirective($$mdLayout) {
     // Return a 1x-only, first-match attribute directive
-    config.enabled = false;
+    $$mdLayout.disable();
 
     return {
       restrict : 'A',
@@ -4479,12 +4499,12 @@ function InterimElementProvider() {
    * finish processing. Eliminates flicker with Material.Layouts
    */
   function buildCloakInterceptor(className) {
-    return [ '$timeout', function($timeout){
+    return [ '$timeout', '$$mdLayout', function($timeout, $$mdLayout){
       return {
         restrict : 'A',
         priority : -10,   // run after normal ng-cloak
         compile  : function( element ) {
-          if (!config.enabled) return angular.noop;
+          if ($$mdLayout.disabled()) return angular.noop;
 
           // Re-add the cloak
           element.addClass(className);
@@ -4519,7 +4539,7 @@ function InterimElementProvider() {
    */
   function attributeWithObserve(className) {
 
-    return ['$mdUtil', '$interpolate', "$log", function(_$mdUtil_, _$interpolate_, _$log_) {
+    return ['$mdUtil', '$interpolate', "$log", '$$mdLayout', function(_$mdUtil_, _$interpolate_, _$log_, $$mdLayout) {
       $mdUtil = _$mdUtil_;
       $interpolate = _$interpolate_;
       $log = _$log_;
@@ -4528,7 +4548,7 @@ function InterimElementProvider() {
         restrict: 'A',
         compile: function(element, attr) {
           var linkFn;
-          if (config.enabled) {
+          if ($$mdLayout.enabled()) {
             // immediately replace static (non-interpolated) invalid values...
 
             validateAttributeUsage(className, attr, element, $log);
@@ -4566,7 +4586,7 @@ function InterimElementProvider() {
    * any attribute value
    */
   function attributeWithoutValue(className) {
-    return ['$mdUtil', '$interpolate', "$log", function(_$mdUtil_, _$interpolate_, _$log_) {
+    return ['$mdUtil', '$interpolate', "$log", '$$mdLayout', function(_$mdUtil_, _$interpolate_, _$log_, $$mdLayout) {
       $mdUtil = _$mdUtil_;
       $interpolate = _$interpolate_;
       $log = _$log_;
@@ -4575,7 +4595,7 @@ function InterimElementProvider() {
         restrict: 'A',
         compile: function(element, attr) {
           var linkFn;
-          if (config.enabled) {
+          if ($$mdLayout.enabled()) {
             // immediately replace static (non-interpolated) invalid values...
 
             validateAttributeValue( className,
@@ -4707,7 +4727,6 @@ function InterimElementProvider() {
         case 'layout-margin'  :
         case 'layout-fill'    :
         case 'layout-wrap'    :
-        case 'layout-nowrap'  :
         case 'layout-nowrap' :
           value = '';
           break;
@@ -4802,7 +4821,7 @@ function InterimElementProvider() {
  * @description
  * AngularJS Material Live Announcer to provide accessibility for Voice Readers.
  */
-MdLiveAnnouncer.$inject = ["$timeout"];
+MdLiveAnnouncer.$inject = ["$timeout", "$document"];
 angular
   .module('material.core')
   .service('$mdLiveAnnouncer', MdLiveAnnouncer);
@@ -4829,12 +4848,12 @@ angular
  * </hljs>
  *
  */
-function MdLiveAnnouncer($timeout) {
+function MdLiveAnnouncer($timeout, $document) {
   /** @private @const @type {!angular.$timeout} */
   this._$timeout = $timeout;
 
   /** @private @const @type {!HTMLElement} */
-  this._liveElement = this._createLiveElement();
+  this._liveElement = createLiveElement($document[0]);
 
   /** @private @const @type {!number} */
   this._announceTimeout = 100;
@@ -4871,9 +4890,8 @@ MdLiveAnnouncer.prototype.announce = function(message, politeness) {
  * Creates a live announcer element, which listens for DOM changes and announces them
  * to the screenreaders.
  * @returns {!HTMLElement}
- * @private
  */
-MdLiveAnnouncer.prototype._createLiveElement = function() {
+function createLiveElement(document) {
   var liveEl = document.createElement('div');
 
   liveEl.classList.add('md-visually-hidden');
@@ -4884,7 +4902,7 @@ MdLiveAnnouncer.prototype._createLiveElement = function() {
   document.body.appendChild(liveEl);
 
   return liveEl;
-};
+}
 
 })();
 (function(){
@@ -4897,16 +4915,16 @@ MdLiveAnnouncer.prototype._createLiveElement = function() {
  *
  * @description
  *
- * A provider and a service that simplifies meta tags access
+ * A service that simplifies meta tags access
  *
  * Note: This is intended only for use with dynamic meta tags such as browser color and title.
  * Tags that are only processed when the page is rendered (such as `charset`, and `http-equiv`)
  * will not work since `$$mdMeta` adds the tags after the page has already been loaded.
  *
  * ```js
- * app.config(function($$mdMetaProvider) {
- *   var removeMeta = $$mdMetaProvider.setMeta('meta-name', 'content');
- *   var metaValue  = $$mdMetaProvider.getMeta('meta-name'); // -> 'content'
+ * app.run(function($$mdMeta) {
+ *   var removeMeta = $$mdMeta.setMeta('meta-name', 'content');
+ *   var metaValue  = $$mdMeta.getMeta('meta-name'); // -> 'content'
  *
  *   removeMeta();
  * });
@@ -4923,8 +4941,8 @@ MdLiveAnnouncer.prototype._createLiveElement = function() {
  *
  */
 angular.module('material.core.meta', [])
-  .provider('$$mdMeta', function () {
-    var head = angular.element(document.head);
+  .factory('$$mdMeta', ['$document', function ($document) {
+    var head = angular.element($document[0].head);
     var metaElements = {};
 
     /**
@@ -4938,7 +4956,7 @@ angular.module('material.core.meta', [])
         return true;
       }
 
-      var element = document.getElementsByName(name)[0];
+      var element = $document[0].getElementsByName(name)[0];
 
       if (!element) {
         return false;
@@ -4999,17 +5017,12 @@ angular.module('material.core.meta', [])
       return metaElements[name].attr('content');
     }
 
-    var module = {
+    return {
       setMeta: setMeta,
       getMeta: getMeta
     };
+  }]);
 
-    return angular.extend({}, module, {
-      $get: function () {
-        return module;
-      }
-    });
-  });
 })();
 (function(){
 "use strict";
@@ -6153,30 +6166,16 @@ angular.module('material.core.theming.palette', [])
  * @description
  * Theming
  */
-detectDisabledThemes.$inject = ["$mdThemingProvider"];
+ThemingProvider.$inject = ["$mdColorPalette", "$injector"];
+generateAllThemes.$inject = ["$injector", "$mdTheming", "$document"];
 ThemingDirective.$inject = ["$mdTheming", "$interpolate", "$parse", "$mdUtil", "$q", "$log"];
 ThemableDirective.$inject = ["$mdTheming"];
-ThemingProvider.$inject = ["$mdColorPalette", "$$mdMetaProvider"];
-generateAllThemes.$inject = ["$injector", "$mdTheming"];
 angular.module('material.core.theming', ['material.core.theming.palette', 'material.core.meta'])
   .directive('mdTheme', ThemingDirective)
   .directive('mdThemable', ThemableDirective)
   .directive('mdThemesDisabled', disableThemesDirective )
   .provider('$mdTheming', ThemingProvider)
-  .config( detectDisabledThemes )
   .run(generateAllThemes);
-
-/**
- * Detect if the HTML or the BODY tags has a [md-themes-disabled] attribute
- * If yes, then immediately disable all theme stylesheet generation and DOM injection
- */
-/**
- * @ngInject
- */
-function detectDisabledThemes($mdThemingProvider) {
-  var isDisabled = !!document.querySelector('[md-themes-disabled]');
-  $mdThemingProvider.disableTheming(isDisabled);
-}
 
 /**
  * @ngdoc service
@@ -6404,18 +6403,21 @@ var VALID_HUE_VALUES = [
   '700', '800', '900', 'A100', 'A200', 'A400', 'A700'
 ];
 
-var themeConfig = {
-  disableTheming : false,   // Generate our themes at run time; also disable stylesheet DOM injection
-  generateOnDemand : false, // Whether or not themes are to be generated on-demand (vs. eagerly).
-  registeredStyles : [],    // Custom styles registered to be used in the theming of custom components.
-  nonce : null              // Nonce to be added as an attribute to the generated themes style tags.
-};
+function browserColorSetter() {
+  var browserColor = {};
+  return {
+    setBrowserColor: function setBrowserColor(color) {
+      browserColor.color = color;
+    },
+    browserColor: browserColor,
+  }
+}
 
 /**
- *
+ * @ngInject
  */
-function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
-  ThemingService.$inject = ["$rootScope", "$mdUtil", "$q", "$log"];
+function ThemingProvider($mdColorPalette, $injector) {
+  themingService.$inject = ["$rootScope", "$mdUtil", "$q", "$log", "$document", "$$mdMeta", "browserColor"];
   PALETTES = { };
   var THEMES = { };
 
@@ -6423,6 +6425,9 @@ function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
 
   var alwaysWatchTheme = false;
   var defaultTheme = 'default';
+  var bcs = browserColorSetter();
+  var doBrowserColor = bcs.setBrowserColor;
+  var browserColor = bcs.browserColor;
 
   // Load JS Defined Palettes
   angular.extend(PALETTES, $mdColorPalette);
@@ -6434,11 +6439,11 @@ function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
    * @param {string} color Hex value of the wanted browser color
    * @returns {Function} Remove function of the meta tags
    */
-  var setBrowserColor = function (color) {
+  var setBrowserColor = function ($$mdMeta, color) {
     // Chrome, Firefox OS and Opera
-    var removeChrome = $$mdMetaProvider.setMeta('theme-color', color);
+    var removeChrome = $$mdMeta.setMeta('theme-color', color);
     // Windows Phone
-    var removeWindows = $$mdMetaProvider.setMeta('msapplication-navbutton-color', color);
+    var removeWindows = $$mdMeta.setMeta('msapplication-navbutton-color', color);
 
     return function () {
       removeChrome();
@@ -6462,7 +6467,7 @@ function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
    * @param {Object=} options Options object for the browser color
    * @returns {Function} remove function of the browser color
    */
-  var enableBrowserColor = function (options) {
+  var enableBrowserColor = function ($$mdMeta, options) {
     options = angular.isObject(options) ? options : {};
 
     var theme = options.theme || 'default';
@@ -6473,7 +6478,14 @@ function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
 
     var color = angular.isObject(palette[hue]) ? palette[hue].hex : palette[hue];
 
-    return setBrowserColor(color);
+    return setBrowserColor($$mdMeta, color);
+  };
+
+  var themeConfig = {
+    disableTheming : false,   // Generate our themes at run time; also disable stylesheet DOM injection
+    generateOnDemand : false, // Whether or not themes are to be generated on-demand (vs. eagerly).
+    registeredStyles : [],    // Custom styles registered to be used in the theming of custom components.
+    nonce : null              // Nonce to be added as an attribute to the generated themes style tags.
   };
 
   return themingProvider = {
@@ -6521,9 +6533,13 @@ function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
       alwaysWatchTheme = alwaysWatch;
     },
 
-    enableBrowserColor: enableBrowserColor,
+    enableBrowserColor: function(color) {
+      doBrowserColor(color);
+    },
 
-    $get: ThemingService,
+    $get: ['$injector', function($injector) {
+      return $injector.invoke(themingService, undefined, { browserColor: browserColor });
+    }],
     _LIGHT_DEFAULT_HUES: LIGHT_DEFAULT_HUES,
     _DARK_DEFAULT_HUES: DARK_DEFAULT_HUES,
     _PALETTES: PALETTES,
@@ -6663,7 +6679,8 @@ function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
 
       self[colorType + 'Color'] = function() {
         var args = Array.prototype.slice.call(arguments);
-        console.warn('$mdThemingProviderTheme.' + colorType + 'Color() has been deprecated. ' +
+        var $log = $injector.get('$log');
+        $log.warn('$mdThemingProviderTheme.' + colorType + 'Color() has been deprecated. ' +
                      'Use $mdThemingProviderTheme.' + colorType + 'Palette() instead.');
         return self[colorType + 'Palette'].apply(self, args);
       };
@@ -6783,7 +6800,7 @@ function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
    */
 
   /* @ngInject */
-  function ThemingService($rootScope, $mdUtil, $q, $log) {
+  function themingService($rootScope, $mdUtil, $q, $log, $document, $$mdMeta, browserColor) {
         // Allow us to be invoked via a linking function signature.
     var applyTheme = function (scope, el) {
           if (el === undefined) { el = scope; scope = undefined; }
@@ -6809,7 +6826,7 @@ function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
     applyTheme.inherit = inheritTheme;
     applyTheme.registered = registered;
     applyTheme.defaultTheme = function() { return defaultTheme; };
-    applyTheme.generateTheme = function(name) { generateTheme(THEMES[name], name, themeConfig.nonce); };
+    applyTheme.generateTheme = function(name) { generateTheme($document[0], THEMES[name], name, themeConfig.nonce); };
     applyTheme.defineTheme = function(name, options) {
       options = options || {};
 
@@ -6835,7 +6852,36 @@ function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
 
       return $q.resolve(name);
     };
-    applyTheme.setBrowserColor = enableBrowserColor;
+
+    applyTheme.setBrowserColor = function (color) {
+      return enableBrowserColor($$mdMeta, color);
+    };
+
+    doBrowserColor = function (color) {
+      $log.warn("$mdThemingProvider.enableBrowserColor() is deprecated, use $mdTheming.setBrowserColor(); in run.");
+      applyTheme.setBrowserColor(color);
+    };
+
+    if ('color' in browserColor) {
+      doBrowserColor(browserColor.color);
+      delete browserColor.color;
+    }
+
+    applyTheme.isDisabled = function() {
+      return themeConfig.disableTheming;
+    };
+
+    applyTheme.registeredStyles = function() {
+      return themeConfig.registeredStyles.join('');
+    };
+
+    applyTheme.generateOnDemand = function() {
+      return themeConfig.generateOnDemand;
+    };
+
+    applyTheme.nonce = function() {
+      return themeConfig.nonce;
+    };
 
     return applyTheme;
 
@@ -7016,8 +7062,6 @@ function ThemingDirective($mdTheming, $interpolate, $parse, $mdUtil, $q, $log) {
  *
  */
 function disableThemesDirective() {
-  themeConfig.disableTheming = true;
-
   // Return a 1x-only, first-match attribute directive
   return {
     restrict : 'A',
@@ -7038,8 +7082,8 @@ function parseRules(theme, colorType, rules) {
 
   var themeNameRegex = new RegExp('\\.md-' + theme.name + '-theme', 'g');
   // Matches '{{ primary-color }}', etc
-  var hueRegex = new RegExp('(\'|")?{{\\s*(' + colorType + ')-(color|contrast)-?(\\d\\.?\\d*)?\\s*}}(\"|\')?','g');
-  var simpleVariableRegex = /'?"?\{\{\s*([a-zA-Z]+)-(A?\d+|hue\-[0-3]|shadow|default)-?(\d\.?\d*)?(contrast)?\s*\}\}'?"?/g;
+  var hueRegex = new RegExp('(\'|")?{{\\s*(' + colorType + ')-(color|contrast)-?(\\d\\.?\\d*)?\\s*}}("|\')?','g');
+  var simpleVariableRegex = /'?"?\{\{\s*([a-zA-Z]+)-(A?\d+|hue-[0-3]|shadow|default)-?(\d\.?\d*)?(contrast)?\s*\}\}'?"?/g;
   var palette = PALETTES[color.name];
 
   // find and replace simple variables where we use a specific hue, not an entire palette
@@ -7091,13 +7135,25 @@ function parseRules(theme, colorType, rules) {
 var rulesByType = {};
 
 // Generate our themes at run time given the state of THEMES and PALETTES
-function generateAllThemes($injector, $mdTheming) {
-  var head = document.head;
+/**
+ * @ngInject
+ */
+function generateAllThemes($injector, $mdTheming, $document) {
+  /**
+   * Detect if the HTML or the BODY tags has a [md-themes-disabled] attribute
+   * If yes, then immediately disable all theme stylesheet generation and DOM injection
+   */
+  var isDisabled = (
+    !$mdTheming.isDisabled ||  // tests tinker with $mdTheming
+    $mdTheming.isDisabled() ||
+    $document[0].querySelector('[md-themes-disabled]')
+  );
+  var head = $document[0].head;
   var firstChild = head ? head.firstElementChild : null;
-  var themeCss = !themeConfig.disableTheming && $injector.has('$MD_THEME_CSS') ? $injector.get('$MD_THEME_CSS') : '';
+  var themeCss = !isDisabled && $injector.has('$MD_THEME_CSS') ? $injector.get('$MD_THEME_CSS') : '';
 
   // Append our custom registered styles to the theme stylesheet.
-  themeCss += themeConfig.registeredStyles.join('');
+  themeCss += $mdTheming.registeredStyles ? $mdTheming.registeredStyles() : '';
 
   if ( !firstChild ) return;
   if (themeCss.length === 0) return; // no rules, so no point in running this expensive task
@@ -7146,11 +7202,11 @@ function generateAllThemes($injector, $mdTheming) {
 
   // If themes are being generated on-demand, quit here. The user will later manually
   // call generateTheme to do this on a theme-by-theme basis.
-  if (themeConfig.generateOnDemand) return;
+  if ($mdTheming.generateOnDemand()) return;
 
   angular.forEach($mdTheming.THEMES, function(theme) {
     if (!GENERATED[theme.name] && !($mdTheming.defaultTheme() !== 'default' && theme.name === 'default')) {
-      generateTheme(theme, theme.name, themeConfig.nonce);
+      generateTheme($document[0], theme, theme.name, $mdTheming.nonce());
     }
   });
 
@@ -7216,7 +7272,7 @@ function generateAllThemes($injector, $mdTheming) {
   }
 }
 
-function generateTheme(theme, name, nonce) {
+function generateTheme(document, theme, name, nonce) {
   var head = document.head;
   var firstChild = head ? head.firstElementChild : null;
 
@@ -7292,29 +7348,33 @@ function rgba(rgbArray, opacity) {
 }
 
 
-})(window.angular);
+})(angular);
 
 })();
 (function(){
 "use strict";
 
 // Polyfill angular < 1.4 (provide $animateCss)
+animateDomUtils.$inject = ["$mdUtil", "$q", "$timeout", "$mdConstant", "$animateCss", "$window"];
 angular
   .module('material.core')
-  .factory('$$mdAnimate', ["$q", "$timeout", "$mdConstant", "$animateCss", function($q, $timeout, $mdConstant, $animateCss){
+  .factory('$$mdAnimate', ["$injector", function($injector){
 
      // Since $$mdAnimate is injected into $mdUtil... use a wrapper function
      // to subsequently inject $mdUtil as an argument to the AnimateDomUtils
 
      return function($mdUtil) {
-       return AnimateDomUtils( $mdUtil, $q, $timeout, $mdConstant, $animateCss);
+       return $injector.invoke(animateDomUtils, undefined, { $mdUtil: $mdUtil });
      };
    }]);
 
 /**
  * Factory function that requires special injections
  */
-function AnimateDomUtils($mdUtil, $q, $timeout, $mdConstant, $animateCss) {
+/**
+ * @ngInject
+ */
+function animateDomUtils($mdUtil, $q, $timeout, $mdConstant, $animateCss, $window) {
   var self;
   return self = {
     /**
@@ -7392,7 +7452,7 @@ function AnimateDomUtils($mdUtil, $q, $timeout, $mdConstant, $animateCss) {
          * @returns {boolean} True if there is no transition/duration; false otherwise.
          */
         function noTransitionFound(styles) {
-          styles = styles || window.getComputedStyle(element[0]);
+          styles = styles || $window.getComputedStyle(element[0]);
 
           return styles.transitionDuration == '0s' || (!styles.transition && !styles.transitionProperty);
         }
@@ -7571,14 +7631,6 @@ if (angular.version.minor >= 4) {
 
   var forEach = angular.forEach;
 
-  var WEBKIT = angular.isDefined(document.documentElement.style.WebkitAppearance);
-  var TRANSITION_PROP = WEBKIT ? 'WebkitTransition' : 'transition';
-  var ANIMATION_PROP = WEBKIT ? 'WebkitAnimation' : 'animation';
-  var PREFIX = WEBKIT ? '-webkit-' : '';
-
-  var TRANSITION_EVENTS = (WEBKIT ? 'webkitTransitionEnd ' : '') + 'transitionend';
-  var ANIMATION_EVENTS = (WEBKIT ? 'webkitAnimationEnd ' : '') + 'animationend';
-
   var $$ForceReflowFactory = ['$document', function($document) {
     return function() {
       return $document[0].body.clientWidth + 1;
@@ -7720,8 +7772,16 @@ if (angular.version.minor >= 4) {
     .factory('$$forceReflow', $$ForceReflowFactory)
     .factory('$$AnimateRunner', $$AnimateRunnerFactory)
     .factory('$$rAFMutex', $$rAFMutexFactory)
-    .factory('$animateCss', ['$window', '$$rAF', '$$AnimateRunner', '$$forceReflow', '$$jqLite', '$timeout', '$animate',
-                     function($window,   $$rAF,   $$AnimateRunner,   $$forceReflow,   $$jqLite,   $timeout, $animate) {
+    .factory('$animateCss', ['$window', '$$rAF', '$$AnimateRunner', '$$forceReflow', '$$jqLite', '$timeout', '$animate', '$document',
+                     function($window,   $$rAF,   $$AnimateRunner,   $$forceReflow,   $$jqLite,   $timeout, $animate, $document) {
+
+      var WEBKIT = angular.isDefined($document[0].documentElement.style.WebkitAppearance);
+      var TRANSITION_PROP = WEBKIT ? 'WebkitTransition' : 'transition';
+      var ANIMATION_PROP = WEBKIT ? 'WebkitAnimation' : 'animation';
+      var PREFIX = WEBKIT ? '-webkit-' : '';
+
+      var TRANSITION_EVENTS = (WEBKIT ? 'webkitTransitionEnd ' : '') + 'transitionend';
+      var ANIMATION_EVENTS = (WEBKIT ? 'webkitAnimationEnd ' : '') + 'animationend';
 
       function init(element, options) {
 
@@ -10307,7 +10367,7 @@ function MdDialogProvider($$interimElementProvider) {
 
       // For navigation $destroy events, do a quick, non-animated removal,
       // but for normal closes (from clicks, etc) animate the removal
-      return !!options.$destroy ? detachAndClean() : animateRemoval().then( detachAndClean );
+      return options.$destroy ? detachAndClean() : animateRemoval().then( detachAndClean );
 
       /**
        * For normal closes, animate the removal.
@@ -10542,7 +10602,7 @@ function MdDialogProvider($$interimElementProvider) {
        */
       options.hideBackdrop = function hideBackdrop($destroy) {
         if (options.backdrop) {
-          if ( !!$destroy ) options.backdrop.remove();
+          if ( $destroy ) options.backdrop.remove();
           else              $animate.leave(options.backdrop);
         }
 
@@ -10601,7 +10661,7 @@ function MdDialogProvider($$interimElementProvider) {
 
       // Set up elements before and after the dialog content to capture focus and
       // redirect back into the dialog.
-      topFocusTrap = document.createElement('div');
+      topFocusTrap = $document[0].createElement('div');
       topFocusTrap.classList.add('md-dialog-focus-trap');
       topFocusTrap.tabIndex = 0;
 
@@ -10645,7 +10705,7 @@ function MdDialogProvider($$interimElementProvider) {
        */
       function walkDOM(element) {
         while (element.parentNode) {
-          if (element === document.body) {
+          if (element === $document[0].body) {
             return;
           }
           var children = element.parentNode.children;
@@ -10885,11 +10945,11 @@ function MdDividerDirective($mdTheming) {
 (function() {
   'use strict';
 
-  MdFabController.$inject = ["$scope", "$element", "$animate", "$mdUtil", "$mdConstant", "$timeout"];
+  MdFabController.$inject = ["$scope", "$element", "$animate", "$mdUtil", "$mdConstant", "$timeout", "$document"];
   angular.module('material.components.fabShared', ['material.core'])
     .controller('MdFabController', MdFabController);
 
-  function MdFabController($scope, $element, $animate, $mdUtil, $mdConstant, $timeout) {
+  function MdFabController($scope, $element, $animate, $mdUtil, $mdConstant, $timeout, $document) {
     var vm = this;
     var initialAnimationAttempts = 0;
 
@@ -11060,7 +11120,7 @@ function MdDividerDirective($mdTheming) {
       // On the next tick, setup a check for outside clicks; we do this on the next tick to avoid
       // clicks/touches that result in the isOpen attribute changing (e.g. a bound radio button)
       $mdUtil.nextTick(function() {
-        angular.element(document).on('click touchend', checkForOutsideClick);
+        $document.on('click touchend', checkForOutsideClick);
       });
 
       // TODO: On desktop, we should be able to reset the indexes so you cannot tab through, but
@@ -11070,7 +11130,7 @@ function MdDividerDirective($mdTheming) {
 
     function disableKeyboard() {
       $element.off('keydown', keyPressed);
-      angular.element(document).off('click touchend', checkForOutsideClick);
+      $document.off('click touchend', checkForOutsideClick);
     }
 
     function checkForOutsideClick(event) {
@@ -11204,8 +11264,8 @@ function MdDividerDirective($mdTheming) {
    *
    * @type {number}
    */
-  MdFabSpeedDialFlingAnimation.$inject = ["$timeout"];
-  MdFabSpeedDialScaleAnimation.$inject = ["$timeout"];
+  MdFabSpeedDialFlingAnimation.$inject = ["$timeout", "$window"];
+  MdFabSpeedDialScaleAnimation.$inject = ["$timeout", "$window"];
   var cssAnimationDuration = 300;
 
   /**
@@ -11317,7 +11377,7 @@ function MdDividerDirective($mdTheming) {
     }
   }
 
-  function MdFabSpeedDialFlingAnimation($timeout) {
+  function MdFabSpeedDialFlingAnimation($timeout, $window) {
     function delayDone(done) { $timeout(done, cssAnimationDuration, false); }
 
     function runAnimation(element) {
@@ -11337,7 +11397,7 @@ function MdDividerDirective($mdTheming) {
       var variablesElement = el.querySelector('._md-css-variables');
 
       // Setup JS variables based on our CSS variables
-      var startZIndex = parseInt(window.getComputedStyle(variablesElement).zIndex);
+      var startZIndex = parseInt($window.getComputedStyle(variablesElement).zIndex);
 
       // Always reset the items to their natural position/state
       angular.forEach(items, function(item, index) {
@@ -11408,7 +11468,7 @@ function MdDividerDirective($mdTheming) {
     };
   }
 
-  function MdFabSpeedDialScaleAnimation($timeout) {
+  function MdFabSpeedDialScaleAnimation($timeout, $window) {
     function delayDone(done) { $timeout(done, cssAnimationDuration, false); }
 
     var delay = 65;
@@ -11422,7 +11482,7 @@ function MdDividerDirective($mdTheming) {
       var variablesElement = el.querySelector('._md-css-variables');
 
       // Setup JS variables based on our CSS variables
-      var startZIndex = parseInt(window.getComputedStyle(variablesElement).zIndex);
+      var startZIndex = parseInt($window.getComputedStyle(variablesElement).zIndex);
 
       // Always reset the items to their natural position/state
       angular.forEach(items, function(item, index) {
@@ -11463,6 +11523,7 @@ function MdDividerDirective($mdTheming) {
    * @ngdoc module
    * @name material.components.fabToolbar
    */
+  MdFabToolbarAnimation.$inject = ["$window"];
   angular
     // Declare our module
     .module('material.components.fabToolbar', [
@@ -11559,7 +11620,10 @@ function MdDividerDirective($mdTheming) {
     }
   }
 
-  function MdFabToolbarAnimation() {
+  /**
+   * @ngInject
+   */
+  function MdFabToolbarAnimation($window) {
 
     function runAnimation(element, className, done) {
       // If no className was specified, don't do anything
@@ -11580,7 +11644,7 @@ function MdDividerDirective($mdTheming) {
       // If we have both elements, use them to position the new background
       if (triggerElement && backgroundElement) {
         // Get our variables
-        var color = window.getComputedStyle(triggerElement).getPropertyValue('background-color');
+        var color = $window.getComputedStyle(triggerElement).getPropertyValue('background-color');
         var width = el.offsetWidth;
         var height = el.offsetHeight;
 
@@ -11664,7 +11728,7 @@ function MdDividerDirective($mdTheming) {
  */
 GridListController.$inject = ["$mdUtil"];
 GridLayoutFactory.$inject = ["$mdUtil"];
-GridListDirective.$inject = ["$interpolate", "$mdConstant", "$mdGridLayout", "$mdMedia"];
+GridListDirective.$inject = ["$interpolate", "$mdConstant", "$mdGridLayout", "$mdMedia", "$document"];
 GridTileDirective.$inject = ["$mdMedia"];
 angular.module('material.components.gridList', ['material.core'])
        .directive('mdGridList', GridListDirective)
@@ -11757,7 +11821,7 @@ angular.module('material.components.gridList', ['material.core'])
  * </md-grid-list>
  * </hljs>
  */
-function GridListDirective($interpolate, $mdConstant, $mdGridLayout, $mdMedia) {
+function GridListDirective($interpolate, $mdConstant, $mdGridLayout, $mdMedia, $document) {
   return {
     restrict: 'E',
     controller: GridListController,
@@ -11934,6 +11998,7 @@ function GridListDirective($interpolate, $mdConstant, $mdGridLayout, $mdMedia) {
 
       // The width and horizontal position of each tile is always calculated the same way, but the
       // height and vertical position depends on the rowMode.
+      var document = $document[0];
       var ltr = document.dir != 'rtl' && document.body.dir != 'rtl';
       var style = ltr ? {
           left: POSITION({ unit: hUnit, offset: position.col, gutter: gutter }),
@@ -11980,10 +12045,10 @@ function GridListDirective($interpolate, $mdConstant, $mdGridLayout, $mdMedia) {
           var vGutterShare = (rowCount - 1) / rowCount;
 
           // Percent of the available vertical space that one row takes up.
-          var vShare = (1 / rowCount) * 100;
+          vShare = (1 / rowCount) * 100;
 
           // Base vertical size of a row.
-          var vUnit = UNIT({share: vShare, gutterShare: vGutterShare, gutter: gutter});
+          vUnit = UNIT({share: vShare, gutterShare: vGutterShare, gutter: gutter});
 
           style.top = POSITION({unit: vUnit, offset: position.row, gutter: gutter});
           style.height = DIMENSION({unit: vUnit, span: spans.row, gutter: gutter});
@@ -12448,20 +12513,29 @@ angular.module('material.components.icon', ['material.core']);
 (function(){
 "use strict";
 
-/**
- * @ngdoc module
- * @name material.components.input
- */
+
 mdInputContainerDirective.$inject = ["$mdTheming", "$parse"];
 inputTextareaDirective.$inject = ["$mdUtil", "$window", "$mdAria", "$timeout", "$mdGesture"];
 mdMaxlengthDirective.$inject = ["$animate", "$mdUtil"];
 placeholderDirective.$inject = ["$compile"];
-ngMessageDirective.$inject = ["$mdUtil"];
+ngMessageDirective.$inject = ["$mdUtil", "$window"];
 mdSelectOnFocusDirective.$inject = ["$timeout"];
-mdInputInvalidMessagesAnimation.$inject = ["$$AnimateRunner", "$animateCss", "$mdUtil", "$log"];
-ngMessagesAnimation.$inject = ["$$AnimateRunner", "$animateCss", "$mdUtil", "$log"];
-ngMessageAnimation.$inject = ["$$AnimateRunner", "$animateCss", "$mdUtil", "$log"];
-var inputModule = angular.module('material.components.input', [
+mdInputInvalidMessagesAnimation.$inject = ["$$AnimateRunner", "$animateCss", "$mdUtil", "$log", "$window"];
+ngMessagesAnimation.$inject = ["$$AnimateRunner", "$animateCss", "$mdUtil", "$log", "$window"];
+ngMessageAnimation.$inject = ["$$AnimateRunner", "$animateCss", "$mdUtil", "$log", "$window"];function mockService(service) {
+  return ['$injector', '$window', (function ($injector, $window) {
+    if (!$window._mdMocksIncluded) {
+      return;
+    }
+    return $injector.invoke(service);
+  })];
+}
+
+/**
+ * @ngdoc module
+ * @name material.components.input
+ */
+angular.module('material.components.input', [
     'material.core'
   ])
   .directive('mdInputContainer', mdInputContainerDirective)
@@ -12477,26 +12551,27 @@ var inputModule = angular.module('material.components.input', [
 
   .animation('.md-input-invalid', mdInputInvalidMessagesAnimation)
   .animation('.md-input-messages-animation', ngMessagesAnimation)
-  .animation('.md-input-message-animation', ngMessageAnimation);
-
-// If we are running inside of tests; expose some extra services so that we can test them
-if (window._mdMocksIncluded) {
-  inputModule.service('$$mdInput', function() {
+  .animation('.md-input-message-animation', ngMessageAnimation)
+  // If we are running inside of tests; expose some extra functions so that we can test them
+  .service('$$mdInput', mockService(['$window', function($window) {
     return {
       // special accessor to internals... useful for testing
       messages: {
-        show        : showInputMessages,
-        hide        : hideInputMessages,
+        show        : function(element, done) {
+          return showInputMessages($window, element, done);
+        },
+        hide        : function(element, done) {
+          return hideInputMessages($window, element, done);
+        },
         getElement  : getMessagesElement
       }
-    }
-  })
+    };
+  }]))
 
   // Register a service for each animation so that we can easily inject them into unit tests
-  .service('mdInputInvalidAnimation', mdInputInvalidMessagesAnimation)
-  .service('mdInputMessagesAnimation', ngMessagesAnimation)
-  .service('mdInputMessageAnimation', ngMessageAnimation);
-}
+  .service('mdInputInvalidAnimation', mockService(mdInputInvalidMessagesAnimation))
+  .service('mdInputMessagesAnimation', mockService(ngMessagesAnimation))
+  .service('mdInputMessageAnimation', mockService(ngMessageAnimation));
 
 /**
  * @ngdoc directive
@@ -13318,7 +13393,7 @@ function ngMessagesDirective() {
   }
 }
 
-function ngMessageDirective($mdUtil) {
+function ngMessageDirective($mdUtil, $window) {
   return {
     restrict: 'EA',
     compile: compile,
@@ -13347,7 +13422,7 @@ function ngMessageDirective($mdUtil) {
     function isInsideFragment() {
       var nextNode = tElement[0];
       while (nextNode = nextNode.parentNode) {
-        if (nextNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+        if (nextNode.nodeType === $window.Node.DOCUMENT_FRAGMENT_NODE) {
           return true;
         }
       }
@@ -13367,33 +13442,33 @@ function ngMessageDirective($mdUtil) {
 
 var $$AnimateRunner, $animateCss, $mdUtil, $log;
 
-function mdInputInvalidMessagesAnimation($$AnimateRunner, $animateCss, $mdUtil, $log) {
+function mdInputInvalidMessagesAnimation($$AnimateRunner, $animateCss, $mdUtil, $log, $window) {
   saveSharedServices($$AnimateRunner, $animateCss, $mdUtil, $log);
 
   return {
     addClass: function(element, className, done) {
-      showInputMessages(element, done);
+      showInputMessages($window, element, done);
     }
 
     // NOTE: We do not need the removeClass method, because the message ng-leave animation will fire
   };
 }
 
-function ngMessagesAnimation($$AnimateRunner, $animateCss, $mdUtil, $log) {
+function ngMessagesAnimation($$AnimateRunner, $animateCss, $mdUtil, $log, $window) {
   saveSharedServices($$AnimateRunner, $animateCss, $mdUtil, $log);
 
   return {
     enter: function(element, done) {
-      showInputMessages(element, done);
+      showInputMessages($window, element, done);
     },
 
     leave: function(element, done) {
-      hideInputMessages(element, done);
+      hideInputMessages($window, element, done);
     },
 
     addClass: function(element, className, done) {
       if (className == "ng-hide") {
-        hideInputMessages(element, done);
+        hideInputMessages($window, element, done);
       } else {
         done();
       }
@@ -13401,7 +13476,7 @@ function ngMessagesAnimation($$AnimateRunner, $animateCss, $mdUtil, $log) {
 
     removeClass: function(element, className, done) {
       if (className == "ng-hide") {
-        showInputMessages(element, done);
+        showInputMessages($window, element, done);
       } else {
         done();
       }
@@ -13409,25 +13484,25 @@ function ngMessagesAnimation($$AnimateRunner, $animateCss, $mdUtil, $log) {
   };
 }
 
-function ngMessageAnimation($$AnimateRunner, $animateCss, $mdUtil, $log) {
+function ngMessageAnimation($$AnimateRunner, $animateCss, $mdUtil, $log, $window) {
   saveSharedServices($$AnimateRunner, $animateCss, $mdUtil, $log);
 
   return {
     enter: function(element, done) {
-      var animator = showMessage(element);
+      var animator = showMessage($window, element);
 
       animator.start().done(done);
     },
 
     leave: function(element, done) {
-      var animator = hideMessage(element);
+      var animator = hideMessage($window, element);
 
       animator.start().done(done);
     }
   };
 }
 
-function showInputMessages(element, done) {
+function showInputMessages($window, element, done) {
   var animators = [], animator;
   var messages = getMessagesElement(element);
   var children = messages.children();
@@ -13439,7 +13514,7 @@ function showInputMessages(element, done) {
   }
 
   angular.forEach(children, function(child) {
-    animator = showMessage(angular.element(child));
+    animator = showMessage($window, angular.element(child));
 
     animators.push(animator.start());
   });
@@ -13447,7 +13522,7 @@ function showInputMessages(element, done) {
   $$AnimateRunner.all(animators, done);
 }
 
-function hideInputMessages(element, done) {
+function hideInputMessages($window, element, done) {
   var animators = [], animator;
   var messages = getMessagesElement(element);
   var children = messages.children();
@@ -13459,7 +13534,7 @@ function hideInputMessages(element, done) {
   }
 
   angular.forEach(children, function(child) {
-    animator = hideMessage(angular.element(child));
+    animator = hideMessage($window, angular.element(child));
 
     animators.push(animator.start());
   });
@@ -13467,9 +13542,9 @@ function hideInputMessages(element, done) {
   $$AnimateRunner.all(animators, done);
 }
 
-function showMessage(element) {
-  var height = parseInt(window.getComputedStyle(element[0]).height);
-  var topMargin = parseInt(window.getComputedStyle(element[0]).marginTop);
+function showMessage($window, element) {
+  var height = parseInt($window.getComputedStyle(element[0]).height);
+  var topMargin = parseInt($window.getComputedStyle(element[0]).marginTop);
 
   var messages = getMessagesElement(element);
   var container = getInputElement(element);
@@ -13491,9 +13566,9 @@ function showMessage(element) {
   });
 }
 
-function hideMessage(element) {
+function hideMessage($window, element) {
   var height = element[0].offsetHeight;
-  var styles = window.getComputedStyle(element[0]);
+  var styles = $window.getComputedStyle(element[0]);
 
   // If we are already hidden, just return an empty animation
   if (parseInt(styles.opacity) === 0) {
@@ -15950,12 +16025,19 @@ MdPanelService.prototype.open = function(preset, config) {
  * @returns {!Object} The preset configuration object.
  */
 MdPanelService.prototype._getPresetByName = function(preset) {
-  if (!this._presets[preset]) {
+  var $injector = this._$injector;
+  var v = this._presets[preset];
+  if (!v) {
     throw new Error('mdPanel: The panel preset configuration that you ' +
         'requested does not exist. Use the $mdPanelProvider to create a ' +
         'preset before requesting one.');
   }
-  return this._presets[preset];
+
+  if (angular.isArray(v) || angular.isFunction(v)) {
+    return $injector.invoke(v);
+  }
+
+  return v;
 };
 
 
@@ -16131,6 +16213,9 @@ function MdPanelRef(config, $injector) {
 
   /** @private @const {!angular.$window} */
   this._$window = $injector.get('$window');
+
+  /** @private @const {!angular.$document} */
+  this._$document = $injector.get('$document');
 
   /** @private @const {!Function} */
   this._$$rAF = $injector.get('$$rAF');
@@ -16416,6 +16501,7 @@ MdPanelRef.prototype.show = function() {
  *     the panel has hidden and animations finish.
  */
 MdPanelRef.prototype.hide = function() {
+  var getElement = getElementGetter(this._$document);
   if (!this.panelContainer) {
     return this._$q(function(resolve, reject) {
       reject('mdPanel: Panel does not exist yet. Call open() or attach().');
@@ -16568,6 +16654,7 @@ MdPanelRef.prototype.toggleClass = function(toggleClass, onElement) {
  * @private
  */
 MdPanelRef.prototype._compile = function() {
+  var getElement = getElementGetter(this._$document);
   var self = this;
 
   // Compile the element via $mdCompiler. Note that when using a
@@ -16611,6 +16698,7 @@ MdPanelRef.prototype._compile = function() {
  * @private
  */
 MdPanelRef.prototype._createPanel = function() {
+  var getElement = getElementGetter(this._$document);
   var self = this;
 
   return this._$q(function(resolve, reject) {
@@ -16855,6 +16943,7 @@ MdPanelRef.prototype._removeEventListeners = function() {
  * @private
  */
 MdPanelRef.prototype._configureEscapeToClose = function() {
+  var getElement = getElementGetter(this._$document);
   if (this.config['escapeToClose']) {
     var parentTarget = getElement(this.config['attachTo']);
     var self = this;
@@ -16886,9 +16975,10 @@ MdPanelRef.prototype._configureEscapeToClose = function() {
  * @private
  */
 MdPanelRef.prototype._configureClickOutsideToClose = function() {
+  var $document = this._$document;
   if (this.config['clickOutsideToClose']) {
     var target = this.config['propagateContainerEvents'] ?
-        angular.element(document.body) :
+        angular.element($document[0].body) :
         this.panelContainer;
     var sourceEl;
 
@@ -17286,6 +17376,9 @@ function MdPanelPosition($injector) {
   /** @private @const {!angular.$mdConstant} */
   this._$mdConstant = $injector.get('$mdConstant');
 
+  /** @private @const {!angular.$document} */
+  this._$document = $injector.get('$document');
+
   /** @private {boolean} */
   this._absolute = false;
 
@@ -17513,6 +17606,7 @@ MdPanelPosition.prototype.center = function() {
  * @returns {!MdPanelPosition}
  */
 MdPanelPosition.prototype.relativeTo = function(element) {
+  var getElement = getElementGetter(this._$document);
   this._absolute = false;
   this._relativeToEl = getElement(element);
   return this;
@@ -17695,7 +17789,7 @@ MdPanelPosition.prototype._isOnscreen = function(panelEl) {
 
   if (this._translateX.length || this._translateY.length) {
     var prefixedTransform = this._$mdConstant.CSS.TRANSFORM;
-    var offsets = getComputedTranslations(panelEl, prefixedTransform);
+    var offsets = getComputedTranslations(this._$window, panelEl, prefixedTransform);
     left += offsets.x;
     top += offsets.y;
   }
@@ -17936,6 +18030,9 @@ function MdPanelAnimation($injector) {
   /** @private @const {!angular.$mdUtil} */
   this._$mdUtil = $injector.get('$mdUtil');
 
+  /** @private @const {!angular.$document} */
+  this._$document = $injector.get('$document');
+
   /**
    * @private {{element: !angular.JQLite|undefined, bounds: !DOMRect}|
    *     undefined}
@@ -18040,6 +18137,7 @@ MdPanelAnimation.prototype.duration = function(duration) {
  * @private
  */
 MdPanelAnimation.prototype._getPanelAnimationTarget = function(location) {
+  var getElement = getElementGetter(this._$document);
   if (angular.isDefined(location.top) || angular.isDefined(location.left)) {
     return {
       element: undefined,
@@ -18252,28 +18350,31 @@ MdPanelAnimation.prototype._getBoundingClientRect = function(element) {
 
 
 /**
- * Returns the angular element associated with a css selector or element.
- * @param el {string|!angular.JQLite|!Element}
- * @returns {!angular.JQLite}
+ * Returns a function that returns the angular element associated with a css selector or element.
+ * @param $document {!angular.JQLite}
+ * @returns {(el: string,!angular.JQLite,!Element) => !angular.JQLite}
  */
-function getElement(el) {
-  var queryResult = angular.isString(el) ?
-      document.querySelector(el) : el;
-  return angular.element(queryResult);
+function getElementGetter($document) {
+  return function getElement(el) {
+    var queryResult = angular.isString(el) ?
+        $document[0].querySelector(el) : el;
+    return angular.element(queryResult);
+  };
 }
 
 
 /**
  * Gets the computed values for an element's translateX and translateY in px.
+ * @param {!angular.$window} $window
  * @param {!angular.JQLite|!Element} el
  * @param {string} property
  * @return {{x: number, y: number}}
  */
-function getComputedTranslations(el, property) {
+function getComputedTranslations($window, el, property) {
   // The transform being returned by `getComputedStyle` is in the format:
   // `matrix(a, b, c, d, translateX, translateY)` if defined and `none`
   // if the element doesn't have a transform.
-  var transform = getComputedStyle(el[0] || el)[property];
+  var transform = $window.getComputedStyle(el[0] || el)[property];
   var openIndex = transform.indexOf('(');
   var closeIndex = transform.lastIndexOf(')');
   var output = { x: 0, y: 0 };
@@ -19495,7 +19596,7 @@ function SelectMenuDirective($parse, $mdUtil, $mdConstant, $mdTheming) {
   // We want the scope to be set to 'false' so an isolated scope is not created
   // which would interfere with the md-select-header's access to the
   // parent scope.
-  SelectMenuController.$inject = ["$scope", "$attrs", "$element"];
+  SelectMenuController.$inject = ["$scope", "$attrs", "$element", "$timeout"];
   return {
     restrict: 'E',
     require: ['mdSelectMenu'],
@@ -19551,7 +19652,15 @@ function SelectMenuDirective($parse, $mdUtil, $mdConstant, $mdTheming) {
     }
   }
 
-  function SelectMenuController($scope, $attrs, $element) {
+  function SelectMenuController($scope, $attrs, $element, $timeout) {
+    function setTimeout(fn, delay) {
+      return $timeout(fn, delay, false);
+    }
+
+    function clearTimeout(obj) {
+      $timeout.cancel(obj);
+    }
+
     var self = this;
     self.isMultiple = angular.isDefined($attrs.multiple);
     // selected is an object with keys matching all of the selected options' hashed values
@@ -20512,7 +20621,7 @@ function SelectProvider($$interimElementProvider) {
 
         minWidth = Math.min(targetRect.width + centeredRect.paddingLeft + centeredRect.paddingRight, maxWidth);
 
-        fontSize = window.getComputedStyle(targetNode)['font-size'];
+        fontSize = $window.getComputedStyle(targetNode)['font-size'];
       }
 
       // Keep left and top within the window
@@ -21204,6 +21313,7 @@ function SidenavController($scope, $attrs, $mdComponentRegistry, $q, $interpolat
    * @ngdoc module
    * @name material.components.slider
    */
+SliderContainerDirective.$inject = ["$window"];
 SliderDirective.$inject = ["$$rAF", "$window", "$mdAria", "$mdUtil", "$mdConstant", "$mdTheming", "$mdGesture", "$parse", "$log", "$timeout"];
   angular.module('material.components.slider', [
     'material.core'
@@ -21225,7 +21335,10 @@ SliderDirective.$inject = ["$$rAF", "$window", "$mdAria", "$mdUtil", "$mdConstan
  * <hljs lang="html">
  * </hljs>
  */
-function SliderContainerDirective() {
+/**
+ * @ngInject
+ */
+function SliderContainerDirective($window) {
   return {
     controller: function () {},
     compile: function (elem) {
@@ -21277,7 +21390,7 @@ function SliderContainerDirective() {
           var input = element[0].querySelector('md-input-container');
 
           if (input) {
-            var computedStyle = getComputedStyle(input);
+            var computedStyle = $window.getComputedStyle(input);
             var minWidth = parseInt(computedStyle.minWidth);
             var padding = parseInt(computedStyle.padding) * 2;
 
@@ -21362,6 +21475,10 @@ function SliderDirective($$rAF, $window, $mdAria, $mdUtil, $mdConstant, $mdThemi
       '</div>',
     compile: compile
   };
+
+  function setTimeout(fn, delay) {
+    return $timeout(fn, delay, false);
+  }
 
   // **********************************************************
   // Private Methods
@@ -23019,7 +23136,7 @@ function MdToastDirective($mdToast) {
 
 function MdToastProvider($$interimElementProvider) {
   // Differentiate promise resolves: hide timeout (value == true) and hide action clicks (value == ok).
-  toastDefaultOptions.$inject = ["$animate", "$mdToast", "$mdUtil", "$mdMedia"];
+  toastDefaultOptions.$inject = ["$animate", "$mdToast", "$mdUtil", "$mdMedia", "$document"];
   var ACTION_RESOLVE = 'ok';
 
   var activeToastContent;
@@ -23079,7 +23196,7 @@ function MdToastProvider($$interimElementProvider) {
     return $mdToast;
 
   /* @ngInject */
-  function toastDefaultOptions($animate, $mdToast, $mdUtil, $mdMedia) {
+  function toastDefaultOptions($animate, $mdToast, $mdUtil, $mdMedia, $document) {
     var SWIPE_EVENTS = '$md.swipeleft $md.swiperight $md.swipeup $md.swipedown';
     return {
       onShow: onShow,
@@ -23096,7 +23213,7 @@ function MdToastProvider($$interimElementProvider) {
           // Root element of template will be <md-toast>. We need to wrap all of its content inside of
           // of <div class="md-toast-content">. All templates provided here should be static, developer-controlled
           // content (meaning we're not attempting to guard against XSS).
-          var templateRoot = document.createElement('md-template');
+          var templateRoot = $document[0].createElement('md-template');
           templateRoot.innerHTML = template;
 
           // Iterate through all root children, to detect possible md-toast directives.
@@ -23471,6 +23588,7 @@ function mdToolbarDirective($$rAF, $mdConstant, $mdUtil, $mdTheming, $animate) {
  * @ngdoc module
  * @name material.components.tooltip
  */
+MdTooltipRegistry.$inject = ["$window"];
 MdTooltipDirective.$inject = ["$timeout", "$window", "$$rAF", "$document", "$interpolate", "$mdUtil", "$mdPanel", "$$mdTooltipRegistry"];
 angular
     .module('material.components.tooltip', [
@@ -23629,7 +23747,7 @@ function MdTooltipDirective($timeout, $window, $$rAF, $document, $interpolate,
       // for it in the form of viable host(parent[0]).
       if (parent[0] && 'MutationObserver' in $window) {
         // Use a mutationObserver to tackle #2602.
-        var attributeObserver = new MutationObserver(function(mutations) {
+        var attributeObserver = new $window.MutationObserver(function(mutations) {
           if (isDisabledMutation(mutations)) {
             $mdUtil.nextTick(function() {
               setVisible(false);
@@ -23667,7 +23785,7 @@ function MdTooltipDirective($timeout, $window, $$rAF, $document, $interpolate,
       }
 
       function windowBlurEventHandler() {
-        elementFocusedOnWindowBlur = document.activeElement === parent[0];
+        elementFocusedOnWindowBlur = $document[0].activeElement === parent[0];
       }
 
       function enterEventHandler($event) {
@@ -23738,7 +23856,7 @@ function MdTooltipDirective($timeout, $window, $$rAF, $document, $interpolate,
 
     function configureWatchers() {
       if (element[0] && 'MutationObserver' in $window) {
-        var attributeObserver = new MutationObserver(function(mutations) {
+        var attributeObserver = new $window.MutationObserver(function(mutations) {
           mutations.forEach(function(mutation) {
             if (mutation.attributeName === 'md-visible' &&
                 !scope.visibleWatcher ) {
@@ -23843,7 +23961,7 @@ function MdTooltipDirective($timeout, $window, $$rAF, $document, $interpolate,
       }
 
       if (!panelRef) {
-        var attachTo = angular.element(document.body);
+        var attachTo = angular.element($document[0].body);
         var panelAnimation = $mdPanel.newPanelAnimation()
             .openFrom(parent)
             .closeTo(parent)
@@ -23887,9 +24005,9 @@ function MdTooltipDirective($timeout, $window, $$rAF, $document, $interpolate,
  *
  * @ngInject
  */
-function MdTooltipRegistry() {
+function MdTooltipRegistry($window) {
   var listeners = {};
-  var ngWindow = angular.element(window);
+  var ngWindow = angular.element($window);
 
   return {
     register: register,
@@ -23919,7 +24037,7 @@ function MdTooltipRegistry() {
     var handlers = listeners[type] = listeners[type] || [];
 
     if (!handlers.length) {
-      useCapture ? window.addEventListener(type, globalEventHandler, true) :
+      useCapture ? $window.addEventListener(type, globalEventHandler, true) :
           ngWindow.on(type, globalEventHandler);
     }
 
@@ -23942,7 +24060,7 @@ function MdTooltipRegistry() {
       handlers.splice(index, 1);
 
       if (handlers.length === 0) {
-        useCapture ? window.removeEventListener(type, globalEventHandler, true) :
+        useCapture ? $window.removeEventListener(type, globalEventHandler, true) :
             ngWindow.off(type, globalEventHandler);
       }
     }
@@ -24049,7 +24167,7 @@ function MdTruncateController($element) {
  * @ngdoc module
  * @name material.components.virtualRepeat
  */
-VirtualRepeatContainerController.$inject = ["$$rAF", "$mdUtil", "$mdConstant", "$parse", "$rootScope", "$window", "$scope", "$element", "$attrs"];
+VirtualRepeatContainerController.$inject = ["$$rAF", "$mdUtil", "$mdConstant", "$parse", "$rootScope", "$window", "$scope", "$element", "$attrs", "$document"];
 VirtualRepeatController.$inject = ["$scope", "$element", "$attrs", "$browser", "$document", "$rootScope", "$$rAF", "$mdUtil"];
 VirtualRepeatDirective.$inject = ["$parse"];
 angular.module('material.components.virtualRepeat', [
@@ -24146,11 +24264,12 @@ var NUM_EXTRA = 3;
 
 /** @ngInject */
 function VirtualRepeatContainerController($$rAF, $mdUtil, $mdConstant, $parse, $rootScope, $window, $scope,
-                                          $element, $attrs) {
+                                          $element, $attrs, $document) {
   this.$rootScope = $rootScope;
   this.$scope = $scope;
   this.$element = $element;
   this.$attrs = $attrs;
+  this.$document = $document;
 
   /** @type {number} The width or height of the container */
   this.size = 0;
@@ -24304,6 +24423,7 @@ VirtualRepeatContainerController.prototype.getDimensionName_ = function() {
 VirtualRepeatContainerController.prototype.sizeScroller_ = function(size) {
   var dimension =  this.getDimensionName_();
   var crossDimension = this.isHorizontal() ? 'height' : 'width';
+  var $document = this.$document;
 
   // Clear any existing dimensions.
   this.sizer.innerHTML = '';
@@ -24321,7 +24441,7 @@ VirtualRepeatContainerController.prototype.sizeScroller_ = function(size) {
     var numChildren = Math.floor(size / this.maxElementPixels);
 
     // Element template to clone for each max-size piece.
-    var sizerChild = document.createElement('div');
+    var sizerChild = $document[0].createElement('div');
     sizerChild.style[dimension] = this.maxElementPixels + 'px';
     sizerChild.style[crossDimension] = '1px';
 
@@ -24427,6 +24547,7 @@ VirtualRepeatContainerController.prototype.resetScroll = function() {
 
 
 VirtualRepeatContainerController.prototype.handleScroll_ = function() {
+  var document = this.$document[0];
   var ltr = document.dir != 'rtl' && document.body.dir != 'rtl';
   if(!ltr && !this.maxSize) {
     this.scroller.scrollLeft = this.scrollSize;
@@ -25151,7 +25272,7 @@ function MdWhiteframeDirective($log) {
 "use strict";
 
 
-MdAutocompleteCtrl.$inject = ["$scope", "$element", "$mdUtil", "$mdConstant", "$mdTheming", "$window", "$animate", "$rootElement", "$attrs", "$q", "$log", "$mdLiveAnnouncer"];angular
+MdAutocompleteCtrl.$inject = ["$scope", "$element", "$mdUtil", "$mdConstant", "$mdTheming", "$window", "$animate", "$rootElement", "$attrs", "$q", "$log", "$mdLiveAnnouncer", "$document"];angular
     .module('material.components.autocomplete')
     .controller('MdAutocompleteCtrl', MdAutocompleteCtrl);
 
@@ -25161,7 +25282,8 @@ var ITEM_HEIGHT   = 48,
     INPUT_PADDING = 2; // Padding provided by `md-input-container`
 
 function MdAutocompleteCtrl ($scope, $element, $mdUtil, $mdConstant, $mdTheming, $window,
-                             $animate, $rootElement, $attrs, $q, $log, $mdLiveAnnouncer) {
+                             $animate, $rootElement, $attrs, $q, $log, $mdLiveAnnouncer,
+                             $document) {
 
   // Internal Variables.
   var ctrl                 = this,
@@ -25175,7 +25297,8 @@ function MdAutocompleteCtrl ($scope, $element, $mdUtil, $mdConstant, $mdTheming,
       fetchesInProgress    = 0,
       enableWrapScroll     = null,
       inputModelCtrl       = null,
-      debouncedOnResize    = $mdUtil.debounce(onWindowResize);
+      debouncedOnResize    = $mdUtil.debounce(onWindowResize),
+      document             = $document[0];
 
   // Public Exported Variables with handlers
   defineProperty('hidden', handleHiddenChange, true);
@@ -26668,14 +26791,15 @@ function MdAutocompleteItemScopeDirective($compile, $mdUtil) {
 "use strict";
 
 
-MdHighlightCtrl.$inject = ["$scope", "$element", "$attrs"];angular
+MdHighlightCtrl.$inject = ["$scope", "$element", "$attrs", "$document"];angular
     .module('material.components.autocomplete')
     .controller('MdHighlightCtrl', MdHighlightCtrl);
 
-function MdHighlightCtrl ($scope, $element, $attrs) {
+function MdHighlightCtrl ($scope, $element, $attrs, $document) {
   this.$scope = $scope;
   this.$element = $element;
   this.$attrs = $attrs;
+  this.$document = $document;
 
   // Cache the Regex to avoid rebuilding each time.
   this.regex = null;
@@ -26734,7 +26858,7 @@ MdHighlightCtrl.prototype.applyRegex = function(text) {
 
       this.$element.append(tokenEl);
     } else {
-      this.$element.append(document.createTextNode(token));
+      this.$element.append(this.$document[0].createTextNode(token));
     }
 
   }.bind(this));
@@ -26779,12 +26903,12 @@ MdHighlightCtrl.prototype.createRegex = function(term, flags) {
   if (flags.indexOf('^') >= 0) startFlag = '^';
   if (flags.indexOf('$') >= 0) endFlag = '$';
 
-  return new RegExp(startFlag + regexTerm + endFlag, flags.replace(/[$\^]/g, ''));
+  return new RegExp(startFlag + regexTerm + endFlag, flags.replace(/[$^]/g, ''));
 };
 
 /** Sanitizes a regex by removing all common RegExp identifiers */
 MdHighlightCtrl.prototype.sanitizeRegex = function(term) {
-  return term && term.toString().replace(/[\\\^\$\*\+\?\.\(\)\|\{}\[\]]/g, '\\$&');
+  return term && term.toString().replace(/[\\^$*+?.()|{}[\]]/g, '\\$&');
 };
 
 })();
@@ -26845,7 +26969,7 @@ function MdHighlight ($interpolate, $parse) {
 "use strict";
 
 
-MdChipCtrl.$inject = ["$scope", "$element", "$mdConstant", "$timeout", "$mdUtil"];angular
+MdChipCtrl.$inject = ["$scope", "$element", "$mdConstant", "$timeout", "$mdUtil", "$document"];angular
   .module('material.components.chips')
   .controller('MdChipCtrl', MdChipCtrl);
 
@@ -26860,7 +26984,7 @@ MdChipCtrl.$inject = ["$scope", "$element", "$mdConstant", "$timeout", "$mdUtil"
  * @param $mdUtil
  * @constructor
  */
-function MdChipCtrl ($scope, $element, $mdConstant, $timeout, $mdUtil) {
+function MdChipCtrl ($scope, $element, $mdConstant, $timeout, $mdUtil, $document) {
   /**
    * @type {$scope}
    */
@@ -26885,6 +27009,11 @@ function MdChipCtrl ($scope, $element, $mdConstant, $timeout, $mdUtil) {
    * @type {$mdUtil}
    */
   this.$mdUtil = $mdUtil;
+
+  /**
+   * @type {$document}
+   */
+  this.$document = $document;
 
   /**
    * @type {boolean}
@@ -26977,6 +27106,8 @@ MdChipCtrl.prototype.goOutOfEditMode = function() {
  * @param node
  */
 MdChipCtrl.prototype.selectNodeContents = function(node) {
+  var document = this.$document[0];
+  var window = this.$window;
   var range, selection;
   if (document.body.createTextRange) {
     range = document.body.createTextRange();
@@ -28679,7 +28810,7 @@ function MdContactChips($mdTheming, $mdUtil) {
    *   <md-calendar ng-model="birthday"></md-calendar>
    * </hljs>
    */
-  CalendarCtrl.$inject = ["$element", "$scope", "$$mdDateUtil", "$mdUtil", "$mdConstant", "$mdTheming", "$$rAF", "$attrs", "$mdDateLocale"];
+  CalendarCtrl.$inject = ["$element", "$scope", "$$mdDateUtil", "$mdUtil", "$mdConstant", "$mdTheming", "$$rAF", "$attrs", "$mdDateLocale", "$document"];
   angular.module('material.components.datepicker')
     .directive('mdCalendar', calendarDirective);
 
@@ -28748,7 +28879,7 @@ function MdContactChips($mdTheming, $mdUtil) {
    * @ngInject @constructor
    */
   function CalendarCtrl($element, $scope, $$mdDateUtil, $mdUtil,
-    $mdConstant, $mdTheming, $$rAF, $attrs, $mdDateLocale) {
+    $mdConstant, $mdTheming, $$rAF, $attrs, $mdDateLocale, $document) {
 
     $mdTheming($element);
 
@@ -28772,6 +28903,9 @@ function MdContactChips($mdTheming, $mdUtil) {
 
     /** @final */
     this.$mdDateLocale = $mdDateLocale;
+
+    /** @final */
+    this.$document = $document;
 
     /** @final {Date} */
     this.today = this.dateUtil.createDateAtMidnight();
@@ -28860,7 +28994,7 @@ function MdContactChips($mdTheming, $mdUtil) {
 
     var handleKeyElement;
     if ($element.parent().hasClass('md-datepicker-calendar')) {
-      handleKeyElement = angular.element(document.body);
+      handleKeyElement = angular.element($document[0].body);
     } else {
       handleKeyElement = $element;
     }
@@ -28983,7 +29117,7 @@ function MdContactChips($mdTheming, $mdUtil) {
       }
 
       var cellId = this.getDateId(date, this.currentView);
-      var cell = document.getElementById(cellId);
+      var cell = this.$document[0].getElementById(cellId);
       if (cell) {
         cell.classList.add(this.FOCUSED_DATE_CLASS);
         cell.focus();
@@ -29146,7 +29280,7 @@ function MdContactChips($mdTheming, $mdUtil) {
 (function() {
   'use strict';
 
-  CalendarMonthCtrl.$inject = ["$element", "$scope", "$animate", "$q", "$$mdDateUtil", "$mdDateLocale"];
+  CalendarMonthCtrl.$inject = ["$element", "$scope", "$animate", "$q", "$$mdDateUtil", "$mdDateLocale", "$document"];
   angular.module('material.components.datepicker')
     .directive('mdCalendarMonth', calendarDirective);
 
@@ -29205,7 +29339,7 @@ function MdContactChips($mdTheming, $mdUtil) {
    * @ngInject @constructor
    */
   function CalendarMonthCtrl($element, $scope, $animate, $q,
-    $$mdDateUtil, $mdDateLocale) {
+    $$mdDateUtil, $mdDateLocale, $document) {
 
     /** @final {!angular.JQLite} */
     this.$element = $element;
@@ -29224,6 +29358,9 @@ function MdContactChips($mdTheming, $mdUtil) {
 
     /** @final */
     this.dateLocale = $mdDateLocale;
+
+    /** @final */
+    this.$document = $document;
 
     /** @final {HTMLElement} */
     this.calendarScroller = $element[0].querySelector('.md-virtual-repeat-scroller');
@@ -29308,6 +29445,7 @@ function MdContactChips($mdTheming, $mdUtil) {
    */
   CalendarMonthCtrl.prototype.changeSelectedDate = function(date) {
     var self = this;
+    var $document = this.$document;
     var calendarCtrl = self.calendarCtrl;
     var previousSelectedDate = calendarCtrl.selectedDate;
     calendarCtrl.selectedDate = date;
@@ -29318,7 +29456,7 @@ function MdContactChips($mdTheming, $mdUtil) {
 
       // Remove the selected class from the previously selected date, if any.
       if (previousSelectedDate) {
-        var prevDateCell = document.getElementById(calendarCtrl.getDateId(previousSelectedDate, namespace));
+        var prevDateCell = $document[0].getElementById(calendarCtrl.getDateId(previousSelectedDate, namespace));
         if (prevDateCell) {
           prevDateCell.classList.remove(selectedDateClass);
           prevDateCell.setAttribute('aria-selected', 'false');
@@ -29327,7 +29465,7 @@ function MdContactChips($mdTheming, $mdUtil) {
 
       // Apply the select class to the new selected date if it is set.
       if (date) {
-        var dateCell = document.getElementById(calendarCtrl.getDateId(date, namespace));
+        var dateCell = $document[0].getElementById(calendarCtrl.getDateId(date, namespace));
         if (dateCell) {
           dateCell.classList.add(selectedDateClass);
           dateCell.setAttribute('aria-selected', 'true');
@@ -29390,6 +29528,7 @@ function MdContactChips($mdTheming, $mdUtil) {
   CalendarMonthCtrl.prototype.buildWeekHeader = function() {
     var firstDayOfWeek = this.dateLocale.firstDayOfWeek;
     var shortDays = this.dateLocale.shortDays;
+    var document = this.$document[0];
 
     var row = document.createElement('tr');
     for (var i = 0; i < 7; i++) {
@@ -29462,7 +29601,7 @@ function MdContactChips($mdTheming, $mdUtil) {
   'use strict';
 
   mdCalendarMonthBodyDirective.$inject = ["$compile", "$$mdSvgRegistry"];
-  CalendarMonthBodyCtrl.$inject = ["$element", "$$mdDateUtil", "$mdDateLocale"];
+  CalendarMonthBodyCtrl.$inject = ["$element", "$$mdDateUtil", "$mdDateLocale", "$document"];
   angular.module('material.components.datepicker')
       .directive('mdCalendarMonthBody', mdCalendarMonthBodyDirective);
 
@@ -29508,7 +29647,7 @@ function MdContactChips($mdTheming, $mdUtil) {
    * Controller for a single calendar month.
    * @ngInject @constructor
    */
-  function CalendarMonthBodyCtrl($element, $$mdDateUtil, $mdDateLocale) {
+  function CalendarMonthBodyCtrl($element, $$mdDateUtil, $mdDateLocale, $document) {
     /** @final {!angular.JQLite} */
     this.$element = $element;
 
@@ -29517,6 +29656,9 @@ function MdContactChips($mdTheming, $mdUtil) {
 
     /** @final */
     this.dateLocale = $mdDateLocale;
+
+    /** @final */
+    this.$document = $document;
 
     /** @type {Object} Reference to the month view. */
     this.monthCtrl = null;
@@ -29565,7 +29707,7 @@ function MdContactChips($mdTheming, $mdUtil) {
     var calendarCtrl = this.calendarCtrl;
 
     // TODO(jelbourn): cloneNode is likely a faster way of doing this.
-    var cell = document.createElement('td');
+    var cell = this.$document[0].createElement('td');
     cell.tabIndex = -1;
     cell.classList.add('md-calendar-date');
     cell.setAttribute('role', 'gridcell');
@@ -29594,7 +29736,7 @@ function MdContactChips($mdTheming, $mdUtil) {
 
       if (this.isDateEnabled(opt_date)) {
         // Add a indicator for select, hover, and focus states.
-        var selectionIndicator = document.createElement('span');
+        var selectionIndicator = this.$document[0].createElement('span');
         selectionIndicator.classList.add('md-calendar-date-selection-indicator');
         selectionIndicator.textContent = cellText;
         cell.appendChild(selectionIndicator);
@@ -29630,7 +29772,7 @@ function MdContactChips($mdTheming, $mdUtil) {
    * @returns {HTMLElement}
    */
   CalendarMonthBodyCtrl.prototype.buildDateRow = function(rowNumber) {
-    var row = document.createElement('tr');
+    var row = this.$document[0].createElement('tr');
     row.setAttribute('role', 'row');
 
     // Because of an NVDA bug (with Firefox), the row needs an aria-label in order
@@ -29648,6 +29790,7 @@ function MdContactChips($mdTheming, $mdUtil) {
    */
   CalendarMonthBodyCtrl.prototype.buildCalendarForMonth = function(opt_dateInMonth) {
     var date = this.dateUtil.isValidDate(opt_dateInMonth) ? opt_dateInMonth : new Date();
+    var document = this.$document[0];
 
     var firstDayOfMonth = this.dateUtil.getFirstDateOfMonth(date);
     var firstDayOfTheWeek = this.getLocaleDay_(firstDayOfMonth);
@@ -29987,7 +30130,7 @@ function MdContactChips($mdTheming, $mdUtil) {
 (function() {
   'use strict';
 
-  CalendarYearBodyCtrl.$inject = ["$element", "$$mdDateUtil", "$mdDateLocale"];
+  CalendarYearBodyCtrl.$inject = ["$element", "$$mdDateUtil", "$mdDateLocale", "$document"];
   angular.module('material.components.datepicker')
       .directive('mdCalendarYearBody', mdCalendarYearDirective);
 
@@ -30023,7 +30166,7 @@ function MdContactChips($mdTheming, $mdUtil) {
    * Controller for a single year.
    * @ngInject @constructor
    */
-  function CalendarYearBodyCtrl($element, $$mdDateUtil, $mdDateLocale) {
+  function CalendarYearBodyCtrl($element, $$mdDateUtil, $mdDateLocale, $document) {
     /** @final {!angular.JQLite} */
     this.$element = $element;
 
@@ -30032,6 +30175,9 @@ function MdContactChips($mdTheming, $mdUtil) {
 
     /** @final */
     this.dateLocale = $mdDateLocale;
+
+    /** @final */
+    this.$document = $document;
 
     /** @type {Object} Reference to the calendar. */
     this.calendarCtrl = null;
@@ -30075,6 +30221,7 @@ function MdContactChips($mdTheming, $mdUtil) {
    * @returns {HTMLElement}
    */
   CalendarYearBodyCtrl.prototype.buildMonthCell = function(year, month) {
+    var $document = this.$document;
     var calendarCtrl = this.calendarCtrl;
     var yearCtrl = this.yearCtrl;
     var cell = this.buildBlankCell();
@@ -30101,7 +30248,7 @@ function MdContactChips($mdTheming, $mdUtil) {
 
     if (this.dateUtil.isMonthWithinRange(firstOfMonth,
         calendarCtrl.minDate, calendarCtrl.maxDate)) {
-      var selectionIndicator = document.createElement('span');
+      var selectionIndicator = $document[0].createElement('span');
       selectionIndicator.classList.add('md-calendar-date-selection-indicator');
       selectionIndicator.textContent = cellText;
       cell.appendChild(selectionIndicator);
@@ -30123,7 +30270,7 @@ function MdContactChips($mdTheming, $mdUtil) {
    * @return {HTMLTableCellElement}
    */
   CalendarYearBodyCtrl.prototype.buildBlankCell = function() {
-    var cell = document.createElement('td');
+    var cell = this.$document[0].createElement('td');
     cell.tabIndex = -1;
     cell.classList.add('md-calendar-date');
     cell.setAttribute('role', 'gridcell');
@@ -30138,6 +30285,7 @@ function MdContactChips($mdTheming, $mdUtil) {
    * @returns {DocumentFragment} A document fragment containing the months within the year.
    */
   CalendarYearBodyCtrl.prototype.buildCalendarForYear = function(date) {
+    var document = this.$document[0];
     // Store rows for the month in a document fragment so that we can append them all at once.
     var year = date.getFullYear();
     var yearBody = document.createDocumentFragment();
@@ -30381,7 +30529,7 @@ function MdContactChips($mdTheming, $mdUtil) {
 
         // Looks for three chunks of content (either numbers or text) separated
         // by delimiters.
-        var re = /^(([a-zA-Z]{3,}|[0-9]{1,4})([ \.,]+|[\/\-])){2}([a-zA-Z]{3,}|[0-9]{1,4})$/;
+        var re = /^(([a-zA-Z]{3,}|[0-9]{1,4})([ .,]+|[/-])){2}([a-zA-Z]{3,}|[0-9]{1,4})$/;
         return re.test(dateString);
       }
 
@@ -30807,7 +30955,7 @@ function MdContactChips($mdTheming, $mdUtil) {
   // TODO(jelbourn): input behavior (masking? auto-complete?)
 
 
-  DatePickerCtrl.$inject = ["$scope", "$element", "$attrs", "$window", "$mdConstant", "$mdTheming", "$mdUtil", "$mdDateLocale", "$$mdDateUtil", "$$rAF", "$filter"];
+  DatePickerCtrl.$inject = ["$scope", "$element", "$attrs", "$window", "$mdConstant", "$mdTheming", "$mdUtil", "$mdDateLocale", "$$mdDateUtil", "$$rAF", "$filter", "$document"];
   datePickerDirective.$inject = ["$$mdSvgRegistry", "$mdUtil", "$mdAria", "inputDirective"];
   angular.module('material.components.datepicker')
       .directive('mdDatepicker', datePickerDirective);
@@ -31038,10 +31186,14 @@ function MdContactChips($mdTheming, $mdUtil) {
    * @ngInject @constructor
    */
   function DatePickerCtrl($scope, $element, $attrs, $window, $mdConstant,
-    $mdTheming, $mdUtil, $mdDateLocale, $$mdDateUtil, $$rAF, $filter) {
+    $mdTheming, $mdUtil, $mdDateLocale, $$mdDateUtil, $$rAF, $filter, $document) {
 
     /** @final */
     this.$window = $window;
+
+    // Super secret window that the tests don't muck with.
+    /** @final */
+    this.$$window = $window;
 
     /** @final */
     this.dateUtil = $$mdDateUtil;
@@ -31058,6 +31210,9 @@ function MdContactChips($mdTheming, $mdUtil) {
     /** @final */
     this.$mdDateLocale = $mdDateLocale;
 
+    /** @final */
+    this.$document = $document;
+
     /**
      * The root document element. This is used for attaching a top-level click handler to
      * close the calendar panel when a click outside said panel occurs. We use `documentElement`
@@ -31065,7 +31220,7 @@ function MdContactChips($mdTheming, $mdUtil) {
      * to be completely off the screen and propagate events directly to the html element.
      * @type {!angular.JQLite}
      */
-    this.documentElement = angular.element(document.documentElement);
+    this.documentElement = angular.element($document[0].documentElement);
 
     /** @type {!angular.NgModelController} */
     this.ngModelCtrl = null;
@@ -31138,7 +31293,7 @@ function MdContactChips($mdTheming, $mdUtil) {
      * triggers whenever the browser zooms in on a focused input.
      */
     this.windowEventName = IS_MOBILE_REGEX.test(
-      navigator.userAgent || navigator.vendor || window.opera
+      $window.navigator.userAgent || $window.navigator.vendor || $window.opera
     ) ? 'orientationchange' : 'resize';
 
     /** Pre-bound close handler so that the event listener can be removed. */
@@ -31460,8 +31615,9 @@ function MdContactChips($mdTheming, $mdUtil) {
 
   /** Position and attach the floating calendar to the document. */
   DatePickerCtrl.prototype.attachCalendarPane = function() {
+    var $document = this.$document;
     var calendarPane = this.calendarPane;
-    var body = document.body;
+    var body = $document[0].body;
 
     calendarPane.style.transform = '';
     this.$element.addClass(OPEN_CLASS);
@@ -31484,13 +31640,13 @@ function MdContactChips($mdTheming, $mdUtil) {
     // then it's possible that the already-scrolled body has a negative top/left. In this case,
     // we want to treat the "real" top as (0 - bodyRect.top). In a normal scrolling situation,
     // though, the top of the viewport should just be the body's scroll position.
-    var viewportTop = (bodyRect.top < 0 && document.body.scrollTop == 0) ?
+    var viewportTop = (bodyRect.top < 0 && body.scrollTop == 0) ?
         -bodyRect.top :
-        document.body.scrollTop;
+        body.scrollTop;
 
-    var viewportLeft = (bodyRect.left < 0 && document.body.scrollLeft == 0) ?
+    var viewportLeft = (bodyRect.left < 0 && body.scrollLeft == 0) ?
         -bodyRect.left :
-        document.body.scrollLeft;
+        body.scrollLeft;
 
     var viewportBottom = viewportTop + this.$window.innerHeight;
     var viewportRight = viewportLeft + this.$window.innerWidth;
@@ -31532,7 +31688,7 @@ function MdContactChips($mdTheming, $mdUtil) {
 
     calendarPane.style.left = paneLeft + 'px';
     calendarPane.style.top = paneTop + 'px';
-    document.body.appendChild(calendarPane);
+    body.appendChild(calendarPane);
 
     // Add CSS class after one frame to trigger open animation.
     this.$$rAF(function() {
@@ -31542,9 +31698,10 @@ function MdContactChips($mdTheming, $mdUtil) {
 
   /** Detach the floating calendar pane from the document. */
   DatePickerCtrl.prototype.detachCalendarPane = function() {
+    var $document = this.$document;
     this.$element.removeClass(OPEN_CLASS);
     this.mdInputContainer && this.mdInputContainer.element.removeClass(OPEN_CLASS);
-    angular.element(document.body).removeClass('md-datepicker-is-showing');
+    angular.element($document[0].body).removeClass('md-datepicker-is-showing');
     this.calendarPane.classList.remove('md-pane-open');
     this.calendarPane.classList.remove('md-datepicker-pos-adjusted');
 
@@ -31564,6 +31721,7 @@ function MdContactChips($mdTheming, $mdUtil) {
    * @param {Event} event
    */
   DatePickerCtrl.prototype.openCalendarPane = function(event) {
+    var $$window = this.$$window;
     if (!this.isCalendarOpen && !this.isDisabled && !this.inputFocusedOnWindowBlur) {
       this.isCalendarOpen = this.isOpen = true;
       this.calendarPaneOpenedFrom = event.target;
@@ -31589,12 +31747,13 @@ function MdContactChips($mdTheming, $mdUtil) {
         self.documentElement.on('click touchstart', self.bodyClickHandler);
       }, false);
 
-      window.addEventListener(this.windowEventName, this.windowEventHandler);
+      $$window.addEventListener(this.windowEventName, this.windowEventHandler);
     }
   };
 
   /** Close the floating calendar pane. */
   DatePickerCtrl.prototype.closeCalendarPane = function() {
+    var $window = this.$window;
     if (this.isCalendarOpen) {
       var self = this;
 
@@ -31603,7 +31762,7 @@ function MdContactChips($mdTheming, $mdUtil) {
       self.evalAttr('ngBlur');
 
       self.documentElement.off('click touchstart', self.bodyClickHandler);
-      window.removeEventListener(self.windowEventName, self.windowEventHandler);
+      $window.removeEventListener(self.windowEventName, self.windowEventHandler);
 
       self.calendarPaneOpenedFrom.focus();
       self.calendarPaneOpenedFrom = null;
@@ -31680,7 +31839,7 @@ function MdContactChips($mdTheming, $mdUtil) {
    * from re-opening.
    */
   DatePickerCtrl.prototype.handleWindowBlur = function() {
-    this.inputFocusedOnWindowBlur = document.activeElement === this.inputElement;
+    this.inputFocusedOnWindowBlur = this.$document[0].activeElement === this.inputElement;
   };
 
   /**
@@ -32021,7 +32180,7 @@ function mdIconDirective($mdIcon, $mdTheming, $mdAria, $sce) {
 "use strict";
 
   
-MdIconService.$inject = ["config", "$templateRequest", "$q", "$log", "$mdUtil", "$sce"];angular
+mdIconService.$inject = ["config", "$templateRequest", "$q", "$log", "$mdUtil", "$sce", "$window"];angular
     .module('material.components.icon')
     .constant('$$mdSvgRegistry', {
         'mdTabsArrow':   'data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHg9IjBweCIgeT0iMHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxnPjxwb2x5Z29uIHBvaW50cz0iMTUuNCw3LjQgMTQsNiA4LDEyIDE0LDE4IDE1LjQsMTYuNiAxMC44LDEyICIvPjwvZz48L3N2Zz4=',
@@ -32032,7 +32191,7 @@ MdIconService.$inject = ["config", "$templateRequest", "$q", "$log", "$mdUtil", 
         'mdCalendar':    'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTkgM2gtMVYxaC0ydjJIOFYxSDZ2Mkg1Yy0xLjExIDAtMS45OS45LTEuOTkgMkwzIDE5YzAgMS4xLjg5IDIgMiAyaDE0YzEuMSAwIDItLjkgMi0yVjVjMC0xLjEtLjktMi0yLTJ6bTAgMTZINVY4aDE0djExek03IDEwaDV2NUg3eiIvPjwvc3ZnPg==',
         'mdChecked':     'data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHg9IjBweCIgeT0iMHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxnPjxwYXRoIGQ9Ik05IDE2LjE3TDQuODMgMTJsLTEuNDIgMS40MUw5IDE5IDIxIDdsLTEuNDEtMS40MXoiLz48L2c+PC9zdmc+'
     })
-    .provider('$mdIcon', MdIconProvider);
+    .provider('$mdIcon', mdIconProvider);
 
 /**
  * @ngdoc service
@@ -32300,75 +32459,78 @@ MdIconService.$inject = ["config", "$templateRequest", "$q", "$log", "$mdUtil", 
  *
  */
 
-var config = {
-  defaultViewBoxSize: 24,
-  defaultFontSet: 'material-icons',
-  fontSets: []
-};
+function mdIconProvider() {
+  var config = {
+    defaultViewBoxSize: 24,
+    defaultFontSet: 'material-icons',
+    fontSets: []
+  };
 
-function MdIconProvider() {
+  function configItem(url, viewBoxSize) {
+    return new ConfigurationItem(url, viewBoxSize || config.defaultViewBoxSize);
+  }
+
+  return {
+    icon: function(id, url, viewBoxSize) {
+      if (id.indexOf(':') == -1) id = '$default:' + id;
+
+      config[id] = configItem(url, viewBoxSize);
+      return this;
+    },
+
+    iconSet: function(id, url, viewBoxSize) {
+      config[id] = configItem(url, viewBoxSize);
+      return this;
+    },
+
+    defaultIconSet: function(url, viewBoxSize) {
+      var setName = '$default';
+
+      if (!config[setName]) {
+        config[setName] = configItem(url, viewBoxSize);
+      }
+
+      config[setName].viewBoxSize = viewBoxSize || config.defaultViewBoxSize;
+
+      return this;
+    },
+
+    defaultViewBoxSize: function(viewBoxSize) {
+      config.defaultViewBoxSize = viewBoxSize;
+      return this;
+    },
+
+    /**
+     * Register an alias name associated with a font-icon library style ;
+     */
+    fontSet: function fontSet(alias, className) {
+      config.fontSets.push({
+        alias: alias,
+        fontSet: className || alias
+      });
+      return this;
+    },
+
+    /**
+     * Specify a default style name associated with a font-icon library
+     * fallback to Material Icons.
+     *
+     */
+    defaultFontSet: function defaultFontSet(className) {
+      config.defaultFontSet = !className ? '' : className;
+      return this;
+    },
+
+    defaultIconSize: function defaultIconSize(iconSize) {
+      config.defaultIconSize = iconSize;
+      return this;
+    },
+
+    $get: ['$injector', function($injector) {
+      return $injector.invoke(mdIconService, undefined, { config: config });
+    }]
+  };
 }
-
-MdIconProvider.prototype = {
-  icon: function(id, url, viewBoxSize) {
-    if (id.indexOf(':') == -1) id = '$default:' + id;
-
-    config[id] = new ConfigurationItem(url, viewBoxSize);
-    return this;
-  },
-
-  iconSet: function(id, url, viewBoxSize) {
-    config[id] = new ConfigurationItem(url, viewBoxSize);
-    return this;
-  },
-
-  defaultIconSet: function(url, viewBoxSize) {
-    var setName = '$default';
-
-    if (!config[setName]) {
-      config[setName] = new ConfigurationItem(url, viewBoxSize);
-    }
-
-    config[setName].viewBoxSize = viewBoxSize || config.defaultViewBoxSize;
-
-    return this;
-  },
-
-  defaultViewBoxSize: function(viewBoxSize) {
-    config.defaultViewBoxSize = viewBoxSize;
-    return this;
-  },
-
-  /**
-   * Register an alias name associated with a font-icon library style ;
-   */
-  fontSet: function fontSet(alias, className) {
-    config.fontSets.push({
-      alias: alias,
-      fontSet: className || alias
-    });
-    return this;
-  },
-
-  /**
-   * Specify a default style name associated with a font-icon library
-   * fallback to Material Icons.
-   *
-   */
-  defaultFontSet: function defaultFontSet(className) {
-    config.defaultFontSet = !className ? '' : className;
-    return this;
-  },
-
-  defaultIconSize: function defaultIconSize(iconSize) {
-    config.defaultIconSize = iconSize;
-    return this;
-  },
-
-  $get: ['$templateRequest', '$q', '$log', '$mdUtil', '$sce', function($templateRequest, $q, $log, $mdUtil, $sce) {
-    return MdIconService(config, $templateRequest, $q, $log, $mdUtil, $sce);
-  }]
-};
 
 /**
  *  Configuration item stored in the Icon registry; used for lookups
@@ -32376,7 +32538,7 @@ MdIconProvider.prototype = {
  */
 function ConfigurationItem(url, viewBoxSize) {
   this.url = url;
-  this.viewBoxSize = viewBoxSize || config.defaultViewBoxSize;
+  this.viewBoxSize = viewBoxSize;
 }
 
 /**
@@ -32423,11 +32585,11 @@ function ConfigurationItem(url, viewBoxSize) {
  */
 
 /* @ngInject */
-function MdIconService(config, $templateRequest, $q, $log, $mdUtil, $sce) {
+function mdIconService(config, $templateRequest, $q, $log, $mdUtil, $sce, $window) {
   var iconCache = {};
   var svgCache = {};
-  var urlRegex = /[-\w@:%\+.~#?&//=]{2,}\.[a-z]{2,4}\b(\/[-\w@:%\+.~#?&//=]*)?/i;
-  var dataUrlRegex = /^data:image\/svg\+xml[\s*;\w\-\=]*?(base64)?,(.*)$/i;
+  var urlRegex = /[-\w@:%+.~#?&//=]{2,}\.[a-z]{2,4}\b(\/[-\w@:%+.~#?&//=]*)?/i;
+  var dataUrlRegex = /^data:image\/svg\+xml[\s*;\w\-=]*?(base64)?,(.*)$/i;
 
   Icon.prototype = {clone: cloneSVG, prepare: prepareAndStyle};
   getIcon.fontSet = findRegisteredFontSet;
@@ -32557,7 +32719,7 @@ function MdIconService(config, $templateRequest, $q, $log, $mdUtil, $sce) {
     function loadByDataUrl(url) {
       var results = dataUrlRegex.exec(url);
       var isBase64 = /base64/i.test(url);
-      var data = isBase64 ? window.atob(results[2]) : results[2];
+      var data = isBase64 ? $window.atob(results[2]) : results[2];
 
       return $q.when(angular.element(data)[0]);
     }
@@ -35669,7 +35831,7 @@ function MdTabsController ($scope, $element, $window, $mdConstant, $mdTabInkRipp
         index = ctrl[ key ];
     for (newIndex = index + inc;
          ctrl.tabs[ newIndex ] && ctrl.tabs[ newIndex ].scope.disabled;
-         newIndex += inc) {}
+         newIndex += inc) { /* do nothing */ }
 
     newIndex = (index + inc + ctrl.tabs.length) % ctrl.tabs.length;
 
@@ -36172,7 +36334,7 @@ function MdTabsDummyWrapper ($mdUtil, $window) {
           characterData: true
         };
 
-        observer = new MutationObserver(mutationCallback);
+        observer = new $window.MutationObserver(mutationCallback);
         observer.observe(element[0], config);
         disconnect = observer.disconnect.bind(observer);
       } else {
@@ -36241,4 +36403,4 @@ angular.module("material.core").constant("$MD_THEME_CSS", "md-autocomplete.md-TH
 })();
 
 
-})(window, window.angular);;window.ngMaterial={version:{full: "1.1.4-master-72f930b"}};
+})(window, window.angular);;window.ngMaterial={version:{full: "1.1.4-master-2773469"}};
